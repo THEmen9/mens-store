@@ -7,6 +7,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      minlength: 3,
       maxlength: 150,
     },
 
@@ -14,6 +15,8 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      minlength: 10,
+      maxlength: 5000,  
     },
 
     category: {
@@ -31,7 +34,7 @@ const productSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: true,
-      min: 0,
+      min: 0.01,
     },
 
     compareAtPrice: {
@@ -46,7 +49,8 @@ const productSchema = new mongoose.Schema(
     },
 
     // Product images
-    images: [
+    images: {
+      type: [
       {
         url: {
           type: String,
@@ -56,12 +60,12 @@ const productSchema = new mongoose.Schema(
 
         publicId: {
           type: String,
-          required: true,
           trim: true,
         },
 
         alt: {
           type: String,
+          required: true,
           trim: true,
           maxlength: 150,
         },
@@ -70,18 +74,31 @@ const productSchema = new mongoose.Schema(
           type: Number,
           required: true,
           min: 0,
+          validate: {
+          validator: Number.isInteger,
+          message: "Position must be a whole number",
+        },
         },
       },
     ],
+     required: true,
+     validate: {
+        validator: (images) => images.length > 0,
+        message: "At least one product image is required",
+      },
+    },
 
     // Product variants and inventory
-    variants: [
+    variants: {
+      type: [
       {
         sku: {
           type: String,
           required: true,
           trim: true,
           uppercase: true,
+          unique: true,
+          index: true,
         },
 
         color: {
@@ -108,6 +125,12 @@ const productSchema = new mongoose.Schema(
         },
       },
     ],
+     required: true,
+     validate: {
+      validator: (variants) => variants.length > 0,
+      message: "At least one product variant is required",
+    },
+},
 
     // Product lifecycle and storefront visibility
     status: {
@@ -126,13 +149,13 @@ const productSchema = new mongoose.Schema(
       title: {
         type: String,
         trim: true,
-        maxlength: 160,
+        maxlength: 60,
       },
 
       description: {
         type: String,
         trim: true,
-        maxlength: 320,
+        maxlength: 160,
       },
 
       slug: {

@@ -1,11 +1,11 @@
-import React from 'react'
+import { Route, Routes } from 'react-router-dom'
 
 function App() {
-  
+
   return (
-    <>
-      <div>Men's-store</div>
-    </>
+    <Routes>
+      <Route path="/" element={<div>Men's-store</div>} />
+    </Routes>
   )
 }
 

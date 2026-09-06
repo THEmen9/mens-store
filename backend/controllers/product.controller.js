@@ -15,6 +15,27 @@ const getProducts = async (req, res, next) => {
   }
 };
 
+// Fetch a product by slug
+const getProductBySlug = async (req, res, next) => {
+  try {
+    const product = await productService.getProductBySlug(req.params.slug);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Fetch a product by ID
 const getProductById = async (req, res, next) => {
   try {
@@ -46,4 +67,5 @@ const getProductById = async (req, res, next) => {
 export default {
   getProducts,
   getProductById,
+  getProductBySlug,
 };

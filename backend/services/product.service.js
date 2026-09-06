@@ -5,6 +5,11 @@ const getProducts = async () => {
   return Product.find();
 };
 
+// Fetch a product by slug
+const getProductBySlug = async (slug) => {
+  return Product.findOne({ "seo.slug": slug });
+};
+
 // Fetch a product by ID
 const getProductById = async (id) => {
   return Product.findById(id);
@@ -13,4 +18,5 @@ const getProductById = async (id) => {
 export default {
   getProducts,
   getProductById,
+  getProductBySlug,
 };

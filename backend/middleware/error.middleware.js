@@ -31,6 +31,14 @@ const errorHandler = (error, req, res, next) => {
     });
   }
 
+  //   Custom error with statusCode and errors
+  if (error.statusCode && error.errors) {
+  return res.status(error.statusCode).json({
+    success: false,
+    message: "Validation failed",
+    errors: error.errors,
+  });
+}
   // Unexpected error
   return res.status(500).json({
     success: false,

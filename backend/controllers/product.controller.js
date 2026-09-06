@@ -67,13 +67,14 @@ const getProductById = async (req, res, next) => {
 // Create a new product
 const createProduct = async (req, res, next) => {
   try {
-    const product = await productService.createProduct(req.body);
+    const result  = await productService.createProduct(req.body);
 
     res.status(201).json({
       success: true,
       message: "Product created successfully",
       data: {
-        product,
+       product: result.product,
+       discount: result.discount,  
       },
     });
   } catch (error) {

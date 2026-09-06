@@ -1,4 +1,6 @@
 import Product from "../models/Product.js";
+import checkVariants from "../utils/checkVariants.js";
+import calculateDiscount from "../utils/calculateDiscount.js";
 
 // unique slug generation function
 const generateSlug = (name) => {
@@ -7,33 +9,6 @@ const generateSlug = (name) => {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-};
-
-// Check for duplicate color and size combinations in variants
-const checkVariants = (variants) => {
-  const combinations = new Set();
-
-  for (const variant of variants) {
-    const combination = `${variant.color.toLowerCase()}-${variant.size.toLowerCase()}`;
-
-    if (combinations.has(combination)) {
-      const error = new Error(
-        "Duplicate color and size combination is not allowed"
-      );
-
-      error.statusCode = 400;
-      error.errors = [
-        {
-          field: "variants",
-          message: "Duplicate color and size combination is not allowed",
-        },
-      ];
-
-      throw error;
-    }
-
-    combinations.add(combination);
-  }
 };
 
 // Fetch all products
@@ -50,9 +25,10 @@ const getProductBySlug = async (slug) => {
 const getProductById = async (id) => {
   return Product.findById(id);
 };
+
 // Create a new product
 const createProduct = async (productData) => {
-  
+
   const { name, images = [], variants = [] } = productData;
   const slug = generateSlug(name);
 
@@ -71,7 +47,17 @@ const createProduct = async (productData) => {
     },
   });
 
-  return product.save();
+  const savedProduct = await product.save();
+
+  const discount = calculateDiscount(
+    savedProduct.price,
+    savedProduct.compareAtPrice
+  );
+    return {
+    product: savedProduct,
+    discount,
+  };
+
 };
 
 export default {

@@ -42,7 +42,7 @@ function Header() {
             Cart
           </button>
         </div>
-        
+
         {/* moblie-nav */}
         <div className="flex w-full items-center justify-between md:hidden">
         <button
@@ -71,6 +71,15 @@ function Header() {
         </div>
         </div>
       </nav>
+      {/* Mobile Search */}
+        <div className="md:hidden">
+        <button
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+        >
+            Search products...
+        </button>
+        </div>
         {/* Search UI */}
         {isSearchOpen && (
         <div>

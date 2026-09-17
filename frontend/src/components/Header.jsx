@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import Button from './ui/Button'
 
 function Header() {
   const[isSearchOpen, setIsSearchOpen] = useState(false);
@@ -21,64 +22,57 @@ function Header() {
 
         <div className="hidden md:flex items-center gap-4">
 
-          <button
-            type="button"
+          <Button
             onClick={() => setIsSearchOpen(true)}
             >
             Search
-          </button>
+          </Button>
 
-          <button
-            type="button"
+          <Button
             onClick={() => setIsWishlistActive((prev) => !prev)}
             >
             {isWishlistActive ? 'Wishlisted' : 'Wishlist'}
-          </button>
+          </Button>
 
-          <button
-            type="button"
+          <Button
             onClick={() => setIsCartOpen(true)}
             >
             Cart
-          </button>
+          </Button>
         </div>
 
         {/* moblie-nav */}
         <div className="flex w-full items-center justify-between md:hidden">
-        <button
-            type="button"
+        <Button
             onClick={() => setIsMenuOpen((prev) => !prev)}
         >
             Menu
-        </button>
+        </Button>
 
         <a href="/">Logo</a>
 
         <div className="flex items-center gap-4">
-            <button
-            type="button"
+            <Button
             onClick={() => setIsWishlistActive((prev) => !prev)}
             >
             {isWishlistActive ? 'Wishlisted' : 'Wishlist'}
-            </button>
+            </Button>
 
-            <button
-            type="button"
+            <Button
             onClick={() => setIsCartOpen(true)}
             >
             Cart
-            </button>
+            </Button>
         </div>
         </div>
       </nav>
       {/* Mobile Search */}
         <div className="md:hidden">
-        <button
-            type="button"
+        <Button
             onClick={() => setIsSearchOpen(true)}
         >
             Search products...
-        </button>
+        </Button>
         </div>
         {/* Search UI */}
         {isSearchOpen && (
@@ -89,12 +83,11 @@ function Header() {
             autoFocus
             />
 
-            <button
-            type="button"
+            <Button
             onClick={() => setIsSearchOpen(false)}
             >
             Close
-            </button>
+            </Button>
         </div>
         )}
         {/* Cart UI */}
@@ -102,12 +95,11 @@ function Header() {
         <div>
             <p>Cart is open</p>
 
-            <button
-            type="button"
+            <Button
             onClick={() => setIsCartOpen(false)}
             >
             Close
-            </button>
+            </Button>
         </div>
         )}
     </header>

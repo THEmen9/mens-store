@@ -1,6 +1,7 @@
 // src/components/Footer.jsx
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Button from './ui/Button'
 
 function Footer() {
   const [email, setEmail] = useState('')
@@ -69,12 +70,12 @@ function Footer() {
             required
             className="border px-3 py-2"
           />
-          <button
+          <Button
           type="submit"
           className="border px-4 py-2"
           >
             Subscribe
-        </button>
+        </Button>
         </form>
         {status === 'success' && <p>Thanks — you're subscribed!</p>}
         {status === 'error' && <p>Please enter a valid email.</p>}

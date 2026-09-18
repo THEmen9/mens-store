@@ -1,5 +1,14 @@
+import { Container } from "../components/ui";
+
 function Home() {
-  return <div>Men's-store</div>
-}
+  return (
+    <>
+    <Container>
+      <div>
+        Men's-store
+      </div>
+  </Container>
+  </>
+)}
 
 export default Home;

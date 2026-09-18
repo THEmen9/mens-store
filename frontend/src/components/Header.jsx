@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import Button from './ui/Button'
+import {Button, Input} from './ui/index'
 
 function Header() {
   const[isSearchOpen, setIsSearchOpen] = useState(false);
@@ -77,7 +77,7 @@ function Header() {
         {/* Search UI */}
         {isSearchOpen && (
         <div>
-            <input
+            <Input
             type="text"
             placeholder="Search products..."
             autoFocus

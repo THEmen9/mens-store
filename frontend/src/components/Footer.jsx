@@ -1,7 +1,8 @@
 // src/components/Footer.jsx
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Button from './ui/Button'
+import {Button, Input} from './ui/index'
+
 
 function Footer() {
   const [email, setEmail] = useState('')
@@ -59,7 +60,7 @@ function Footer() {
         <form
         onSubmit={handleSubscribe}
         className="flex flex-col gap-2 sm:flex-row">
-          <input
+          <Input
             type="email"
             placeholder="Enter your email"
             value={email}

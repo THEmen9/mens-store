@@ -1,13 +1,20 @@
-import { Container } from "../components/ui";
+import {
+  HeroSection,
+  ShopByCategory,
+  FeaturedCollection,
+  NewArrivals,
+  BrandStory
+} from '../components/home'
+
 
 function Home() {
   return (
     <>
-    <Container>
-      <div>
-        Men's-store
-      </div>
-  </Container>
+     <HeroSection />
+     <ShopByCategory />
+     <FeaturedCollection />
+     <NewArrivals />
+     <BrandStory/>
   </>
 )}
 

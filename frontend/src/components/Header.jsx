@@ -1,11 +1,10 @@
 import {useState} from 'react';
-import {Button, Input} from './ui/index'
+import {Button, Search} from './ui/index'
 
 function Header() {
   const[isSearchOpen, setIsSearchOpen] = useState(false);
   const [isWishlistActive, setIsWishlistActive] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header>
@@ -40,56 +39,13 @@ function Header() {
             Cart
           </Button>
         </div>
-
-        {/* moblie-nav */}
-        <div className="flex w-full items-center justify-between md:hidden">
-        <Button
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-        >
-            Menu
-        </Button>
-
-        <a href="/">Logo</a>
-
-        <div className="flex items-center gap-4">
-            <Button
-            onClick={() => setIsWishlistActive((prev) => !prev)}
-            >
-            {isWishlistActive ? 'Wishlisted' : 'Wishlist'}
-            </Button>
-
-            <Button
-            onClick={() => setIsCartOpen(true)}
-            >
-            Cart
-            </Button>
-        </div>
-        </div>
       </nav>
-      {/* Mobile Search */}
-        <div className="md:hidden">
-        <Button
-            onClick={() => setIsSearchOpen(true)}
-        >
-            Search products...
-        </Button>
-        </div>
+
         {/* Search UI */}
         {isSearchOpen && (
-        <div>
-            <Input
-            type="text"
-            placeholder="Search products..."
-            autoFocus
-            />
-
-            <Button
-            onClick={() => setIsSearchOpen(false)}
-            >
-            Close
-            </Button>
-        </div>
+          <Search onClose={() => setIsSearchOpen(false)} />
         )}
+
         {/* Cart UI */}
         {isCartOpen && (
         <div>

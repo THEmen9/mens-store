@@ -52,20 +52,9 @@ const MobileBottomNav = () => {
 
   return (
     <nav
-      className={`
-        fixed
-        bottom-0
-        left-0
-        right-0
-        z-50
-        md:hidden
-        border-t
-        border-gray-200
-        bg-white
-        transition-transform
-        duration-300
-        ${isVisible ? "translate-y-0" : "translate-y-full"}
-      `}
+      className={`fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-gray-200 bg-white
+      transition-transform duration-300
+      ${isVisible ? "translate-y-0" : "translate-y-full"}`}
     >
       <div className="mx-auto flex h-16 max-w-md items-center justify-around px-2">
         <Link
@@ -76,20 +65,21 @@ const MobileBottomNav = () => {
             <span className="text-[11px]">Home</span>
         </Link>
 
-        <button className="flex flex-col items-center gap-1">
-          <LuShoppingBag size={20} />
-          <span className="text-[11px]">Shop</span>
-        </button>
+        <Link to="/shop" className="flex flex-col items-center gap-1">
+            <LuShoppingBag size={20} />
+            <span className="text-[11px]">Shop</span>
+        </Link>
 
-        <button className="flex flex-col items-center gap-1">
-          <LuHeart size={20} />
-          <span className="text-[11px]">Wishlist</span>
-        </button>
+        <Link to="/wishlist" className="flex flex-col items-center gap-1">
+            <LuHeart size={20} />
+            <span className="text-[11px]">Wishlist</span>
+        </Link>
 
-        <button className="flex flex-col items-center gap-1">
+        <Link to="/cart" className="flex flex-col items-center gap-1">
           <LuShoppingCart size={20}/>
           <span className="text-[11px]">Cart</span>
-        </button>
+        </Link>
+
       </div>
     </nav>
   );

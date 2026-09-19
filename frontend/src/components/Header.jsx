@@ -1,63 +1,44 @@
 import {useState} from 'react';
-import {Button, Search} from './ui/index'
+import { Link } from 'react-router-dom'
+import { LuSearch, LuHeart, LuShoppingCart } from 'react-icons/lu';
+import {Button} from './ui/index'
 
 function Header() {
-  const[isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isWishlistActive, setIsWishlistActive] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
   return (
     <header>
       <nav className="mx-auto flex items-center justify-between px-6 py-4">
         <div className="hidden md:block">
-            <a href="/">Logo</a>
+          <Link to="/">Logo</Link>
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          <a href="/">Shop</a>
-          <a href="/">Collections</a>
-          <a href="/">New Arrivals</a>
+          <Link to="/shop">Shop</Link>
+          <Link to="/collections">Collections</Link>
+          <Link to="/new-arrivals">New Arrivals</Link>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
 
-          <Button
-            onClick={() => setIsSearchOpen(true)}
-            >
-            Search
-          </Button>
+          <Link to="/search">
+            <Button aria-label="Open search">
+              <LuSearch size={20} />
+            </Button>
+          </Link>
 
-          <Button
-            onClick={() => setIsWishlistActive((prev) => !prev)}
-            >
-            {isWishlistActive ? 'Wishlisted' : 'Wishlist'}
-          </Button>
+          <Link to="/wishlist">
+            <Button aria-label="Open wishlist">
+              <LuHeart size={20} />
+            </Button>
+          </Link>
 
-          <Button
-            onClick={() => setIsCartOpen(true)}
-            >
-            Cart
-          </Button>
+          <Link to="/cart">
+            <Button aria-label="Open cart">
+              <LuShoppingCart size={20} />
+            </Button>
+          </Link>
         </div>
       </nav>
 
-        {/* Search UI */}
-        {isSearchOpen && (
-          <Search onClose={() => setIsSearchOpen(false)} />
-        )}
-
-        {/* Cart UI */}
-        {isCartOpen && (
-        <div>
-            <p>Cart is open</p>
-
-            <Button
-            onClick={() => setIsCartOpen(false)}
-            >
-            Close
-            </Button>
-        </div>
-        )}
     </header>
   )
 }

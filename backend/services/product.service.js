@@ -12,8 +12,38 @@ const generateSlug = (name) => {
 };
 
 // Fetch all products
-const getProducts = async () => {
-  return Product.find();
+const getProducts = async ({ page = 1, limit = 12, sort = "newest" }) => {
+  const skip = (page - 1) * limit;
+
+  const sortOptions = {
+    newest: { createdAt: -1 },
+    "price-asc": { price: 1 },
+    "price-desc": { price: -1 },
+  };
+
+  const sortValue = sortOptions[sort];
+
+  const filter = {
+    status: "active",
+  };
+
+  const [products, totalProducts] = await Promise.all([
+    Product.find(filter)
+      .sort(sortValue)
+      .skip(skip)
+      .limit(limit),
+    Product.countDocuments(filter),
+  ]);
+
+  return {
+    products,
+    pagination: {
+      page,
+      limit,
+      totalProducts,
+      totalPages: Math.ceil(totalProducts / limit),
+    },
+  };
 };
 
 // Fetch a product by slug

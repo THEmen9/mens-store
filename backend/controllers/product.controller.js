@@ -1,14 +1,20 @@
 import productService from "../services/product.service.js";
-import isValidObjectId from "../utils/isValidObjectId.js";
+import {isValidObjectId, productQuery} from "../utils/index.js";
 
 // Fetch all products
 const getProducts = async (req, res, next) => {
   try {
-    const products = await productService.getProducts();
+    const { page, limit, sort } = productQuery(req.query);
+
+    const result = await productService.getProducts({
+      page,
+      limit,
+      sort,
+    });
 
     res.status(200).json({
       success: true,
-      data: products,
+      data: result,
     });
   } catch (error) {
     next(error);

@@ -34,9 +34,9 @@ function Footer() {
 
       {/* Main navigation */}
       <nav aria-label="Footer navigation" className="flex flex-col gap-2">
-        <Link to="/">Shop</Link>
-        <Link to="/">Collections</Link>
-        <Link to="/">New Arrivals</Link>
+        <Link to="/shop">Shop</Link>
+        <Link to="/collections">Collections</Link>
+        <Link to="/new-arrivals">New Arrivals</Link>
       </nav>
 
       {/* Customer/service links */}

@@ -5,6 +5,7 @@ function Button({
   onClick,
   disabled = false,
   className = '',
+   ...props
 }) {
   return (
     <button
@@ -12,6 +13,7 @@ function Button({
       onClick={onClick}
       disabled={disabled}
       className={className}
+      {...props}
     >
       {children}
     </button>

@@ -1,4 +1,3 @@
-import {useState} from 'react';
 import { Link } from 'react-router-dom'
 import { LuSearch, LuHeart, LuShoppingCart } from 'react-icons/lu';
 import {Button} from './ui/index'

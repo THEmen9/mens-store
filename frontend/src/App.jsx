@@ -9,6 +9,7 @@ import {
   NewArrivals,
   Shop,
   Wishlist,
+  Search
 } from './pages';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/search" element={<Search />} />
       </Routes>
     </MainLayout>
   )

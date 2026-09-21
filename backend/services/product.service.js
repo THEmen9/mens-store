@@ -17,6 +17,7 @@ const getProducts = async ({
   limit = 12,
   sort = "newest",
   search = "",
+  category = "",
   }) => {
   const skip = (page - 1) * limit;
 
@@ -27,11 +28,11 @@ const getProducts = async ({
   };
 
   const sortValue = sortOptions[sort];
-// Search
   const filter = {
     status: "active",
   };
-
+  
+// Search
   if (search) {
   filter.$or = [
     { name: { $regex: search, $options: "i" } },
@@ -39,6 +40,13 @@ const getProducts = async ({
     { category: { $regex: search, $options: "i" } },
     { subcategory: { $regex: search, $options: "i" } },
   ];
+}
+// category
+if (category) {
+  filter.category = {
+    $regex: `^${category}$`,
+    $options: "i",
+  };
 }
 
   const [products, totalProducts] = await Promise.all([

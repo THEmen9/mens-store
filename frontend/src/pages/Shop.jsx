@@ -1,11 +1,30 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../components/ui';
 import { FiX } from 'react-icons/fi';
 import ShopFilters from '../components/shop/ShopFilters';
+import { getProducts } from '../api/product.api';
 
 function Shop() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
+
+  const [products, setProducts] = useState([]);
+
+   useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await getProducts();
+
+        console.log('Products API response:', response);
+
+        setProducts(response.data.products);
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   
   return (
     <main className="px-4 py-8 md:px-8 lg:px-12">

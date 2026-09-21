@@ -116,12 +116,18 @@ const getProducts = async ({
 
 // Fetch a product by slug
 const getProductBySlug = async (slug) => {
-  return Product.findOne({ "seo.slug": slug });
+  return Product.findOne({
+     "seo.slug": slug,
+      status: "active",
+    });
 };
 
 // Fetch a product by ID
 const getProductById = async (id) => {
-  return Product.findById(id);
+  return Product.findOne({
+    _id: id,
+    status: "active",
+  });
 };
 
 // Create a new product

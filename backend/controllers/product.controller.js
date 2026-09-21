@@ -1,5 +1,5 @@
 import productService from "../services/product.service.js";
-import {isValidObjectId, productQuery} from "../utils/index.js";
+import { isValidObjectId, productQuery } from "../utils/index.js";
 
 // Fetch all products
 const getProducts = async (req, res, next) => {

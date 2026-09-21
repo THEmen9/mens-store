@@ -13,6 +13,8 @@ const getProducts = async (req, res, next) => {
        subcategory,
        minPrice,
        maxPrice,
+       color,
+       size,
       } = productQuery(req.query);
 
     const result = await productService.getProducts({
@@ -24,6 +26,8 @@ const getProducts = async (req, res, next) => {
       subcategory,
       minPrice,
       maxPrice,
+      color,
+      size,
     });
 
     res.status(200).json({

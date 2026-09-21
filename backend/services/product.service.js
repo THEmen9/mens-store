@@ -21,6 +21,8 @@ const getProducts = async ({
   subcategory = "",
   minPrice,
   maxPrice,
+  color,
+  size,
   }) => {
   const skip = (page - 1) * limit;
 
@@ -69,6 +71,28 @@ const getProducts = async ({
     if (maxPrice !== undefined) {
       filter.price.$lte = maxPrice;
     }
+  }
+  //size/color query
+  if (color || size) {
+    const variantFilter = {};
+
+    if (color) {
+      variantFilter.color = {
+        $regex: `^${color}$`,
+        $options: "i",
+      };
+    }
+
+    if (size) {
+      variantFilter.size = {
+        $regex: `^${size}$`,
+        $options: "i",
+      };
+    }
+
+    filter.variants = {
+      $elemMatch: variantFilter,
+    };
   }
 
   const [products, totalProducts] = await Promise.all([

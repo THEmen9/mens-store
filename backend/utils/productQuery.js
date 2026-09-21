@@ -18,6 +18,9 @@ const productQuery = (query) => {
   const minPrice = query.minPrice === undefined ? undefined : Number(query.minPrice);
   const maxPrice = query.maxPrice === undefined ? undefined : Number(query.maxPrice);
 
+  const color = query.color?.trim() || "";
+  const size = query.size?.trim() || "";
+
   // sort query
   if (!Number.isInteger(page) || page < 1) {
     throw createQueryError("Page must be a positive integer");
@@ -55,7 +58,9 @@ if (
     category,
     subcategory,
     minPrice,
-    maxPrice
+    maxPrice,
+    color,
+    size
   };
 };
 

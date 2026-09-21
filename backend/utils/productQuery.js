@@ -12,6 +12,7 @@ const productQuery = (query) => {
   const sort = query.sort || "newest";
   const search = query.search?.trim() || "";
   const category = query.category?.trim() || "";
+  const subcategory = query.subcategory?.trim() || "";
 
   if (!Number.isInteger(page) || page < 1) {
     throw createQueryError("Page must be a positive integer");
@@ -30,7 +31,8 @@ const productQuery = (query) => {
     limit,
     sort,
     search,
-    category
+    category,
+    subcategory
   };
 };
 

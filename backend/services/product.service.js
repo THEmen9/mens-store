@@ -18,6 +18,7 @@ const getProducts = async ({
   sort = "newest",
   search = "",
   category = "",
+  subcategory = "",
   }) => {
   const skip = (page - 1) * limit;
 
@@ -31,7 +32,7 @@ const getProducts = async ({
   const filter = {
     status: "active",
   };
-  
+
 // Search
   if (search) {
   filter.$or = [
@@ -45,6 +46,13 @@ const getProducts = async ({
 if (category) {
   filter.category = {
     $regex: `^${category}$`,
+    $options: "i",
+  };
+}
+// subcategory
+if (subcategory) {
+  filter.subcategory = {
+    $regex: `^${subcategory}$`,
     $options: "i",
   };
 }

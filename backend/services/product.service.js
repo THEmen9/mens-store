@@ -19,6 +19,8 @@ const getProducts = async ({
   search = "",
   category = "",
   subcategory = "",
+  minPrice,
+  maxPrice,
   }) => {
   const skip = (page - 1) * limit;
 
@@ -35,27 +37,39 @@ const getProducts = async ({
 
 // Search
   if (search) {
-  filter.$or = [
-    { name: { $regex: search, $options: "i" } },
-    { description: { $regex: search, $options: "i" } },
-    { category: { $regex: search, $options: "i" } },
-    { subcategory: { $regex: search, $options: "i" } },
-  ];
-}
+    filter.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+      { category: { $regex: search, $options: "i" } },
+      { subcategory: { $regex: search, $options: "i" } },
+    ];
+  }
 // category
-if (category) {
-  filter.category = {
-    $regex: `^${category}$`,
-    $options: "i",
-  };
-}
+  if (category) {
+    filter.category = {
+      $regex: `^${category}$`,
+      $options: "i",
+    };
+  }
 // subcategory
-if (subcategory) {
-  filter.subcategory = {
-    $regex: `^${subcategory}$`,
-    $options: "i",
-  };
-}
+  if (subcategory) {
+    filter.subcategory = {
+      $regex: `^${subcategory}$`,
+      $options: "i",
+    };
+  }
+  // price query
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    filter.price = {};
+
+    if (minPrice !== undefined) {
+      filter.price.$gte = minPrice;
+    }
+
+    if (maxPrice !== undefined) {
+      filter.price.$lte = maxPrice;
+    }
+  }
 
   const [products, totalProducts] = await Promise.all([
     Product.find(filter)

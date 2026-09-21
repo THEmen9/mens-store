@@ -12,7 +12,12 @@ const generateSlug = (name) => {
 };
 
 // Fetch all products
-const getProducts = async ({ page = 1, limit = 12, sort = "newest" }) => {
+const getProducts = async ({
+  page = 1,
+  limit = 12,
+  sort = "newest",
+  search = "",
+  }) => {
   const skip = (page - 1) * limit;
 
   const sortOptions = {
@@ -22,10 +27,19 @@ const getProducts = async ({ page = 1, limit = 12, sort = "newest" }) => {
   };
 
   const sortValue = sortOptions[sort];
-
+// Search
   const filter = {
     status: "active",
   };
+
+  if (search) {
+  filter.$or = [
+    { name: { $regex: search, $options: "i" } },
+    { description: { $regex: search, $options: "i" } },
+    { category: { $regex: search, $options: "i" } },
+    { subcategory: { $regex: search, $options: "i" } },
+  ];
+}
 
   const [products, totalProducts] = await Promise.all([
     Product.find(filter)

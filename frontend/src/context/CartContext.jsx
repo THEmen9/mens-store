@@ -43,7 +43,7 @@ export function CartProvider({ children }) {
       return [...currentItems, item]
     })
   };
-
+// update qunatity
   const updateQuantity = (variantId, quantity) => {
     if (quantity < 1) return
 
@@ -55,6 +55,14 @@ export function CartProvider({ children }) {
       )
     )
   }
+// remove from cart
+  const removeFromCart = (variantId) => {
+  setCartItems((currentItems) =>
+    currentItems.filter(
+      (item) => item.variantId !== variantId
+    )
+  )
+}
 
   useEffect(() => {
       localStorage.setItem('cart', JSON.stringify(cartItems))
@@ -66,6 +74,7 @@ export function CartProvider({ children }) {
         cartItems,
         addToCart,
         updateQuantity,
+        removeFromCart,
       }}
     >
       {children}

@@ -164,9 +164,52 @@ const createProduct = async (productData) => {
 
 };
 
+// update product
+const prepareProductImages = (images) => {
+  return images.map((image, index) => ({
+    ...image,
+    position: index,
+  }))
+}
+
+const updateProduct = async (id, productData) => {
+  const product = await Product.findById(id)
+
+    if (!product) {
+      const error = new Error("Product not found")
+      error.statusCode = 404
+      throw error
+    }
+
+    if (productData.variants) {
+      checkVariants(productData.variants)
+    }
+
+    const updateData = { ...productData }
+    
+    if (updateData.images) {
+      updateData.images = prepareProductImages(updateData.images)
+    }
+
+    Object.assign(product, updateData);
+
+    const updatedProduct = await product.save();
+
+    const discount = calculateDiscount(
+      updatedProduct.price,
+      updatedProduct.compareAtPrice
+    );
+
+    return {
+      product: updatedProduct,
+      discount,
+    }
+}
+
 export default {
   getProducts,
   getProductById,
   getProductBySlug,
   createProduct,
+  updateProduct,
 };

@@ -16,4 +16,7 @@ router.get("/:id", productController.getProductById);
 // Create a new product
 router.post("/", productController.createProduct);
 
+// Update a product
+router.patch("/:id", productController.updateProduct);
+
 export default router;

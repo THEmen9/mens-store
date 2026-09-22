@@ -3,6 +3,8 @@ import { Button } from '../components/ui';
 import { FiX } from 'react-icons/fi';
 import ShopFilters from '../components/shop/ShopFilters';
 import { getProducts } from '../api/product.api';
+import ProductCard from '../components/product/ProductCard';
+
 
 function Shop() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -93,12 +95,11 @@ function Shop() {
           {/* Product Grid */}
           <div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index}>
-                  <div className="aspect-3/4 bg-neutral-100" />
-                  <div className="mt-3 h-4 w-2/3 bg-neutral-100" />
-                  <div className="mt-2 h-4 w-1/3 bg-neutral-100" />
-                </div>
+              {products.map((product) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                />
               ))}
             </div>
           </div>

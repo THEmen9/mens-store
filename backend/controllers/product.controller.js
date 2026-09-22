@@ -106,9 +106,38 @@ const createProduct = async (req, res, next) => {
   }
 };
 
+// Update a product
+const updateProduct = async (req, res, next) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
+
+    const result = await productService.updateProduct(
+      req.params.id,
+      req.body
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      data: {
+        product: result.product,
+        discount: result.discount,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getProducts,
   getProductById,
   getProductBySlug,
   createProduct,
+  updateProduct,
 };

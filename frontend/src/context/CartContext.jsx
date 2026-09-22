@@ -44,6 +44,18 @@ export function CartProvider({ children }) {
     })
   };
 
+  const updateQuantity = (variantId, quantity) => {
+    if (quantity < 1) return
+
+    setCartItems((currentItems) =>
+      currentItems.map((item) =>
+        item.variantId === variantId
+          ? { ...item, quantity }
+          : item
+      )
+    )
+  }
+
   useEffect(() => {
       localStorage.setItem('cart', JSON.stringify(cartItems))
     }, [cartItems]);
@@ -53,6 +65,7 @@ export function CartProvider({ children }) {
       value={{
         cartItems,
         addToCart,
+        updateQuantity,
       }}
     >
       {children}

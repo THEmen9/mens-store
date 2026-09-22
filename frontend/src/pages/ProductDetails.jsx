@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getProductBySlug } from '../api/product.api'
 import { Button } from '../components/ui';
+import { useCart } from '../context/CartContext'
 
 function ProductDetails() {
     const { slug } = useParams();
+    const { cartItems, addToCart } = useCart()
 
     const [product, setProduct] = useState(null);
     const [selectedColor, setSelectedColor] = useState(null);
@@ -38,7 +40,7 @@ function ProductDetails() {
   if (!product) {
     return <p>Loading...</p>
   }
-
+    
     const colors = [...new Set(product.variants.map((variant) => variant.color))]
 
     const sizes = [...new Set(product.variants.map((variant) => variant.size))]
@@ -162,6 +164,26 @@ function ProductDetails() {
                     : 'Out of stock'}
                 </p>
             )}
+
+            <Button
+            type="button"
+            disabled={!selectedVariant || selectedVariant.stock <= 0}
+            onClick={() => {
+                addToCart({
+                productId: product._id,
+                variantId: selectedVariant._id,
+                quantity: 1,
+                name: product.name,
+                image: product.images?.[0]?.url,
+                color: selectedVariant.color,
+                size: selectedVariant.size,
+                price: product.price,
+                })
+            }}
+            className="mt-8 w-full px-4 py-3 text-sm font-medium"
+            >
+                Add to Cart
+            </Button>
             </div>
         </div>
     </section>

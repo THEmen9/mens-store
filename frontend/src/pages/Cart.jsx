@@ -1,8 +1,9 @@
 import CartItem from '../components/cart/CartItem'
 import CartSummary from '../components/cart/CartSummary'
+import { useCart } from '../context/CartContext'
 
 function Cart() {
-  const cartSkeletons = Array.from({ length: 3 })
+  const { cartItems } = useCart();
 
   return (
     <main className="px-4 py-8 md:px-8 lg:px-12">
@@ -26,9 +27,18 @@ function Cart() {
         <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
           {/* Cart Items */}
           <div className="space-y-6">
-            {cartSkeletons.map((_, index) => (
-              <CartItem key={index} />
-            ))}
+            {cartItems.length === 0 ? (
+              <p className="text-sm text-neutral-500">
+                Your cart is empty.
+              </p>
+            ) : (
+              cartItems.map((item) => (
+                <CartItem
+                  key={item.variantId}
+                  item={item}
+                />
+              ))
+            )}
           </div>
 
           {/* Cart Summary */}

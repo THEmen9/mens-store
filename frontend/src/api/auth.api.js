@@ -31,3 +31,38 @@ export function addAddress(address, token) {
     body: JSON.stringify(address),
   })
 }
+
+export function getAddresses(token) {
+  return apiClient('/auth/addresses', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+export function updateAddress(addressId, address, token) {
+  return apiClient(`/auth/addresses/${addressId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(address),
+  })
+}
+
+export function setDefaultAddress(addressId, token) {
+  return apiClient(`/auth/addresses/${addressId}/default`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function deleteAddress(addressId, token) {
+  return apiClient(`/auth/addresses/${addressId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}

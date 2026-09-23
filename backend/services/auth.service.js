@@ -106,6 +106,56 @@ const loginUser = async ({ email, password }) => {
         },
     };
 };
+// address
+const addAddress = async (userId, addressData) => {
+    const { fullName, phone, address, city, state, pincode } = addressData
+
+    if (
+        !fullName ||
+        !phone ||
+        !address ||
+        !city ||
+        !state ||
+        !pincode
+    ) {
+        const error = new Error("All address fields are required")
+        error.statusCode = 400
+        throw error
+    }
+
+    if (!/^\d{10}$/.test(phone)) {
+        const error = new Error("Please provide a valid 10-digit phone number")
+        error.statusCode = 400
+        throw error
+    }
+
+    if (!/^\d{6}$/.test(pincode)) {
+        const error = new Error("Please provide a valid 6-digit pincode")
+        error.statusCode = 400
+        throw error
+    }
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+        const error = new Error("User not found")
+        error.statusCode = 404
+        throw error
+    }
+
+    user.addresses.push({
+        fullName: fullName.trim(),
+        phone,
+        address: address.trim(),
+        city: city.trim(),
+        state: state.trim(),
+        pincode,
+    })
+
+    await user.save()
+
+    return user.addresses[user.addresses.length - 1]
+}
 // Current user
 const getCurrentUser = async (userId) => {
   const user = await User.findById(userId).select(
@@ -129,4 +179,5 @@ export default {
   registerUser,
   loginUser,
   getCurrentUser,
+  addAddress,
 };

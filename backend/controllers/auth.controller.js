@@ -27,6 +27,25 @@ const login = async (req, res, next) => {
     next(error);
   }
 };
+// address
+const addAddress = async (req, res, next) => {
+  try {
+    const address = await authService.addAddress(
+      req.user,
+      req.body
+    )
+
+    res.status(201).json({
+      success: true,
+      message: "Address saved successfully",
+      data: {
+        address,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
 // getme
 const getMe = async (req, res, next) => {
   try {
@@ -46,5 +65,6 @@ const getMe = async (req, res, next) => {
 export default {
   register,
   login,
+  addAddress,
   getMe,
 };

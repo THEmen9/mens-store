@@ -69,10 +69,15 @@ const userSchema = new mongoose.Schema(
     passwordHash: {
       type: String,
     },
+
+    addresses: {
+      type: [addressSchema],
+      default: [],
+    },
   },
   {
     timestamps: true,
   }
 );
 
-export default mongoose.model("User", userSchema, addressSchema);
+export default mongoose.model("User", userSchema);

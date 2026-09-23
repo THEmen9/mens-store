@@ -1,4 +1,79 @@
+import { useState } from 'react'
+
+import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+import { Input, Button } from '../components/ui'
+
 function Checkout() {
+  const { cartItems } = useCart()
+  const { user } = useAuth()
+
+  const subtotal = cartItems.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  )
+
+  const [address, setAddress] = useState({
+    fullName: user?.name || '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+  })
+
+  const [addressError, setAddressError] = useState('')
+  const [addressSaved, setAddressSaved] = useState(false)
+
+  const handleAddressChange = (event) => {
+    const { name, value } = event.target
+
+    setAddress((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+// Validation-handler
+  const handleAddressContinue = () => {
+    setAddressError('')
+    setAddressSaved(false)
+
+    const requiredFields = [
+      'fullName',
+      'phone',
+      'address',
+      'city',
+      'state',
+      'pincode',
+    ]
+
+    const hasEmptyField = requiredFields.some(
+      (field) => !address[field].trim()
+    )
+
+    if (hasEmptyField) {
+      setAddressError('Please fill in all address fields.')
+      return
+    }
+
+    if (!/^\d{10}$/.test(address.phone)) {
+      setAddressError('Please enter a valid 10-digit phone number.')
+      return
+    }
+
+    if (!/^\d{6}$/.test(address.pincode)) {
+      setAddressError('Please enter a valid 6-digit pincode.')
+      return
+    }
+
+    setAddressSaved(true)
+
+    setTimeout(() => {
+      setAddressSaved(false)
+    }, 1500)
+
+  }
+
   return (
     <main className="px-4 py-8 md:px-8 lg:px-12">
       <section className="mx-auto max-w-7xl">
@@ -17,6 +92,25 @@ function Checkout() {
               <h2 className="text-lg font-medium">
                 Customer
               </h2>
+               <div className="mt-6 space-y-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-neutral-500">
+                    Name
+                  </p>
+                  <p className="mt-1 text-sm">
+                    {user?.name}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-neutral-500">
+                    Email
+                  </p>
+                  <p className="mt-1 text-sm">
+                    {user?.email}
+                  </p>
+                </div>
+              </div>
             </section>
 
             {/* Address */}
@@ -24,6 +118,63 @@ function Checkout() {
               <h2 className="text-lg font-medium">
                 Delivery Address
               </h2>
+
+              <div className="mt-6 grid gap-5 md:grid-cols-2">
+                <Input
+                  label="Full Name"
+                  name="fullName"
+                  value={address.fullName}
+                  onChange={handleAddressChange}
+                  required
+                />
+
+                <Input
+                  label="Phone"
+                  name="phone"
+                  type="tel"
+                  value={address.phone}
+                  onChange={handleAddressChange}
+                  placeholder="10-digit phone number"
+                  required
+                />
+
+                <div className="md:col-span-2">
+                  <Input
+                    label="Address"
+                    name="address"
+                    value={address.address}
+                    onChange={handleAddressChange}
+                    placeholder="House no., street, area"
+                    required
+                  />
+                </div>
+
+                <Input
+                  label="City"
+                  name="city"
+                  value={address.city}
+                  onChange={handleAddressChange}
+                  required
+                />
+
+                <Input
+                  label="State"
+                  name="state"
+                  value={address.state}
+                  onChange={handleAddressChange}
+                  required
+                />
+
+                <Input
+                  label="Pincode"
+                  name="pincode"
+                  inputMode="numeric"
+                  value={address.pincode}
+                  onChange={handleAddressChange}
+                  placeholder="6-digit pincode"
+                  required
+                />
+              </div>
             </section>
           </div>
 
@@ -32,7 +183,54 @@ function Checkout() {
             <h2 className="text-lg font-medium">
               Order Summary
             </h2>
+
+            <div className="mt-6 space-y-4">
+              {cartItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex justify-between gap-4 text-sm"
+                >
+                  <div>
+                    <p>{item.name}</p>
+                    <p className="text-neutral-500">
+                      Qty: {item.quantity}
+                    </p>
+                  </div>
+
+                  <p>
+                    ₹{(item.price * item.quantity).toFixed(2)}
+                  </p>
+                </div>
+              ))}
+
+              <div className="border-t pt-4">
+                <div className="flex justify-between text-sm font-medium">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
           </aside>
+        </div>
+        {addressError && (
+          <p className="mt-4 text-sm text-red-600">
+            {addressError}
+          </p>
+        )}
+
+        {addressSaved && (
+          <p className="mt-4 text-sm text-green-700">
+            Delivery address saved.
+          </p>
+        )}
+
+        <div className="mt-6">
+          <Button
+            type="button"
+            onClick={handleAddressContinue}
+          >
+            Continue
+          </Button>
         </div>
       </section>
     </main>

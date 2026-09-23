@@ -101,8 +101,27 @@ const loginUser = async ({ email, password }) => {
         },
     };
 };
+// Current user
+const getCurrentUser = async (userId) => {
+  const user = await User.findById(userId).select(
+    "_id name email"
+  );
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+  };
+};
 
 export default {
   registerUser,
   loginUser,
+  getCurrentUser,
 };

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
@@ -7,11 +8,38 @@ import { Input, Button } from '../components/ui'
 function Checkout() {
   const { cartItems } = useCart()
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   const subtotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   )
+
+  if (cartItems.length === 0) {
+    return (
+      <main className="px-4 py-16 md:px-8 lg:px-12">
+        <section className="mx-auto max-w-3xl text-center">
+          <p className="text-sm uppercase tracking-widest text-neutral-500">
+            Checkout
+          </p>
+
+          <h1 className="mt-3 text-3xl font-medium tracking-tight md:text-5xl">
+            Your cart is empty
+          </h1>
+
+          <p className="mt-4 text-sm text-neutral-500">
+            Add some products to your cart before continuing to checkout.
+          </p>
+
+          <div className="mt-8">
+            <Button type="button" onClick={() => navigate('/shop')}>
+              Continue Shopping
+            </Button>
+          </div>
+        </section>
+      </main>
+    )
+  }
 
   const [address, setAddress] = useState({
     fullName: user?.name || '',

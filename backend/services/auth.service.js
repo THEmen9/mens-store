@@ -156,6 +156,18 @@ const addAddress = async (userId, addressData) => {
 
     return user.addresses[user.addresses.length - 1]
 }
+// getaddress
+const getAddresses = async (userId) => {
+  const user = await User.findById(userId).select("addresses")
+
+  if (!user) {
+    const error = new Error("User not found")
+    error.statusCode = 404
+    throw error
+  }
+
+  return user.addresses
+}
 // Current user
 const getCurrentUser = async (userId) => {
   const user = await User.findById(userId).select(
@@ -180,4 +192,5 @@ export default {
   loginUser,
   getCurrentUser,
   addAddress,
+  getAddresses
 };

@@ -7,5 +7,6 @@ router.get("/me", authMiddleware, authController.getMe);
 router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.post("/addresses", authMiddleware, authController.addAddress);
+router.get("/addresses", authMiddleware, authController.getAddresses);
 
 export default router;

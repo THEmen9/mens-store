@@ -46,6 +46,21 @@ const addAddress = async (req, res, next) => {
     next(error)
   }
 }
+// getaddress
+const getAddresses = async (req, res, next) => {
+  try {
+    const addresses = await authService.getAddresses(req.user)
+
+    res.status(200).json({
+      success: true,
+      data: {
+        addresses,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
 // getme
 const getMe = async (req, res, next) => {
   try {
@@ -65,6 +80,7 @@ const getMe = async (req, res, next) => {
 export default {
   register,
   login,
-  addAddress,
   getMe,
+  addAddress,
+  getAddresses
 };

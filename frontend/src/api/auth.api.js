@@ -21,3 +21,13 @@ export function register(userData) {
     body: JSON.stringify(userData),
   })
 }
+
+export function addAddress(address, token) {
+  return apiClient('/auth/addresses', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(address),
+  })
+}

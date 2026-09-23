@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { Input, Button } from '../components/ui'
+import { addAddress } from '../api/auth.api'
 
 function Checkout() {
   const { cartItems } = useCart()
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const navigate = useNavigate()
 
   const subtotal = cartItems.reduce(
@@ -62,7 +63,7 @@ function Checkout() {
     }))
   }
 // Validation-handler
-  const handleAddressContinue = () => {
+  const handleAddressContinue = async  () => {
     setAddressError('')
     setAddressSaved(false)
 
@@ -94,11 +95,17 @@ function Checkout() {
       return
     }
 
-    setAddressSaved(true)
+    try {
+      await addAddress(address, token)
 
-    setTimeout(() => {
-      setAddressSaved(false)
-    }, 1500)
+      setAddressSaved(true)
+
+        setTimeout(() => {
+          setAddressSaved(false)
+        }, 1500)
+      } catch (error) {
+        setAddressError(error.message)
+    }
 
   }
 

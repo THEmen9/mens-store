@@ -10,7 +10,8 @@ import {
   Shop,
   Wishlist,
   Search,
-  ProductDetails
+  ProductDetails,
+  Checkout,
 } from './pages';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/new-arrivals" element={<NewArrivals />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/account" element={<Account />} />
         <Route path="/search" element={<Search />} />
         <Route path="/products/:slug" element={<ProductDetails />} />

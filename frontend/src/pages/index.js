@@ -7,6 +7,7 @@ import { default as Shop } from './Shop';
 import { default as Wishlist } from './Wishlist';
 import { default as Search } from './Search'
 import {default as ProductDetails} from './ProductDetails'
+import {default as Checkout} from './Checkout'
 
 export {
   Account,
@@ -17,5 +18,6 @@ export {
   Shop,
   Wishlist,
   Search,
-  ProductDetails
+  ProductDetails,
+  Checkout
 };

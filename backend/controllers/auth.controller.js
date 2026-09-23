@@ -29,8 +29,18 @@ const login = async (req, res, next) => {
     next(error);
   }
 };
+// Getme
+const getMe = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: {
+      userId: req.user,
+    },
+  });
+};
 
 export default {
   register,
   login,
+  getMe,
 };

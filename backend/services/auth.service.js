@@ -135,13 +135,15 @@ const addAddress = async (userId, addressData) => {
         throw error
     }
 
-    const user = await User.findById(userId)
+    const user = await User.findById(userId);
 
     if (!user) {
         const error = new Error("User not found")
         error.statusCode = 404
         throw error
     }
+
+    const isDefault = user.addresses.length === 0;
 
     user.addresses.push({
         fullName: fullName.trim(),
@@ -150,41 +152,98 @@ const addAddress = async (userId, addressData) => {
         city: city.trim(),
         state: state.trim(),
         pincode,
+        isDefault,
+    });
+
+    await user.save();
+
+    return user.addresses[user.addresses.length - 1];
+};
+// getaddress
+const getAddresses = async (userId) => {
+    const user = await User.findById(userId).select("addresses")
+
+    if (!user) {
+        const error = new Error("User not found")
+        error.statusCode = 404
+        throw error
+    }
+
+    return user.addresses
+}
+// default-address
+const setDefaultAddress = async (userId, addressId) => {
+    const user = await User.findById(userId)
+
+    if (!user) {
+        const error = new Error('User not found')
+        error.statusCode = 404
+        throw error
+    }
+
+    const address = user.addresses.id(addressId)
+
+    if (!address) {
+        const error = new Error('Address not found')
+        error.statusCode = 404
+        throw error
+    }
+
+    user.addresses.forEach((item) => {
+        item.isDefault = item._id.toString() === addressId
     })
 
     await user.save()
 
-    return user.addresses[user.addresses.length - 1]
+    return address
 }
-// getaddress
-const getAddresses = async (userId) => {
-  const user = await User.findById(userId).select("addresses")
+// delete-address
+const deleteAddress = async (userId, addressId) => {
+    const user = await User.findById(userId)
 
-  if (!user) {
-    const error = new Error("User not found")
-    error.statusCode = 404
-    throw error
-  }
+    if (!user) {
+        const error = new Error('User not found')
+        error.statusCode = 404
+        throw error
+    }
 
-  return user.addresses
+    const address = user.addresses.id(addressId)
+
+    if (!address) {
+        const error = new Error('Address not found')
+        error.statusCode = 404
+        throw error
+    }
+
+    const wasDefault = address.isDefault
+
+    address.deleteOne()
+
+    if (wasDefault && user.addresses.length > 0) {
+        user.addresses[0].isDefault = true
+    }
+
+    await user.save()
+
+    return addressId
 }
 // Current user
 const getCurrentUser = async (userId) => {
-  const user = await User.findById(userId).select(
-    "_id name email"
-  );
+    const user = await User.findById(userId).select(
+        "_id name email"
+    );
 
-  if (!user) {
-    const error = new Error("User not found");
-    error.statusCode = 404;
-    throw error;
-  }
+    if (!user) {
+        const error = new Error("User not found");
+        error.statusCode = 404;
+        throw error;
+    }
 
-  return {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-  };
+    return {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+    };
 };
 
 export default {
@@ -192,5 +251,7 @@ export default {
   loginUser,
   getCurrentUser,
   addAddress,
-  getAddresses
+  getAddresses,
+  setDefaultAddress,
+  deleteAddress
 };

@@ -61,6 +61,40 @@ const getAddresses = async (req, res, next) => {
     next(error)
   }
 }
+// default-address
+const setDefaultAddress = async (req, res, next) => {
+  try {
+    const address = await authService.setDefaultAddress(
+      req.user,
+      req.params.addressId
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Default address updated successfully',
+      data: { address },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+// delete-address
+const deleteAddress = async (req, res, next) => {
+  try {
+    const addressId = await authService.deleteAddress(
+      req.user,
+      req.params.addressId
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Address deleted successfully',
+      data: { addressId },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
 // getme
 const getMe = async (req, res, next) => {
   try {
@@ -82,5 +116,7 @@ export default {
   login,
   getMe,
   addAddress,
-  getAddresses
+  getAddresses,
+  setDefaultAddress,
+  deleteAddress,
 };

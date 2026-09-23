@@ -42,6 +42,11 @@ const addressSchema = new mongoose.Schema(
       required: true,
       match: /^\d{6}$/,
     },
+
+    isDefault: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     _id: true,

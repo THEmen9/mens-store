@@ -46,11 +46,16 @@ const registerUser = async ({ name, email, password }) => {
         passwordHash,
     });
 
+    const token = generateToken(user._id.toString());
+
     return {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-    };
+        token,
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+        },
+    }
 };
 
 // login

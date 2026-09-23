@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import { LuSearch, LuHeart, LuShoppingCart } from 'react-icons/lu';
+import {Link} from 'react-router-dom'
+import {LuSearch, LuHeart, LuShoppingCart, LuUser} from 'react-icons/lu';
 import {Button} from './ui/index'
 
 function Header() {
@@ -27,6 +27,12 @@ function Header() {
           <Link to="/wishlist">
             <Button aria-label="Open wishlist">
               <LuHeart size={20} />
+            </Button>
+          </Link>
+
+          <Link to="/account">
+            <Button aria-label="Open account">
+              <LuUser size={20} />
             </Button>
           </Link>
 

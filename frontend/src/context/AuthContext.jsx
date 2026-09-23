@@ -5,7 +5,11 @@ import {
   useState,
 } from 'react'
 
-import { getCurrentUser, login as loginApi } from '../api/auth.api'
+import {
+  getCurrentUser,
+  login as loginApi,
+  register as registerApi,
+} from '../api/auth.api'
 
 const AuthContext = createContext(null);
 
@@ -37,7 +41,7 @@ export function AuthProvider({ children }) {
 
     restoreSession()
   }, [token])
-
+// login
   const login = async (credentials) => {
     const response = await loginApi(credentials)
 
@@ -49,12 +53,23 @@ export function AuthProvider({ children }) {
 
     return user
   }
-
+// logout
   const logout = () => {
     localStorage.removeItem('token')
     setToken(null)
     setUser(null)
   }
+// register
+  const register = async (userData) => {
+    const response = await registerApi(userData)
+
+    const { token, user } = response.data
+    localStorage.setItem('token', token)
+    setToken(token)
+    setUser(user)
+
+    return user
+}
 
   return (
     <AuthContext.Provider
@@ -65,6 +80,7 @@ export function AuthProvider({ children }) {
         isAuthenticated: Boolean(user),
         login,
         logout,
+        register
       }}
     >
       {children}

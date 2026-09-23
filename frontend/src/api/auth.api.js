@@ -14,3 +14,10 @@ export function getCurrentUser(token) {
     },
   })
 }
+
+export function register(userData) {
+  return apiClient('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(userData),
+  })
+}

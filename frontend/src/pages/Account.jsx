@@ -1,4 +1,16 @@
+import { useNavigate } from 'react-router-dom'
+import { Button } from '../components/ui'
+import { useAuth } from '../context/AuthContext'
+
 function Account() {
+  
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
   return (
     <main className="px-4 py-8 md:px-8 lg:px-12">
       {/* Page Header */}
@@ -21,18 +33,36 @@ function Account() {
         <div className="grid gap-6 md:grid-cols-2">
           {/* Profile */}
           <section className="border p-6">
-            <div className="h-5 w-24 bg-neutral-100" />
+            <h2 className="text-lg font-medium">
+              Profile
+            </h2>
 
             <div className="mt-6 space-y-4">
               <div>
-                <div className="h-3 w-16 bg-neutral-100" />
-                <div className="mt-2 h-4 w-40 bg-neutral-100" />
+                <p className="text-xs uppercase tracking-wider text-neutral-500">
+                  Name
+                </p>
+                <p className="mt-1 text-sm">
+                  {user?.name}
+                </p>
               </div>
 
               <div>
-                <div className="h-3 w-16 bg-neutral-100" />
-                <div className="mt-2 h-4 w-52 bg-neutral-100" />
+                <p className="text-xs uppercase tracking-wider text-neutral-500">
+                  Email
+                </p>
+                <p className="mt-1 text-sm">
+                  {user?.email}
+                </p>
               </div>
+
+              <Button
+                type="button"
+                onClick={handleLogout}
+                className="mt-2 border border-neutral-900 px-4 py-2 text-sm"
+              >
+                Logout
+              </Button>
             </div>
           </section>
 

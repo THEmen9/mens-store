@@ -8,6 +8,8 @@ import { default as Wishlist } from './Wishlist';
 import { default as Search } from './Search'
 import {default as ProductDetails} from './ProductDetails'
 import {default as Checkout} from './Checkout'
+import {default as Login} from './Login'
+import {default as Register} from './Register'
 
 export {
   Account,
@@ -19,5 +21,7 @@ export {
   Wishlist,
   Search,
   ProductDetails,
-  Checkout
+  Checkout,
+  Login,
+  Register
 };

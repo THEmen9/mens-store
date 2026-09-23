@@ -227,6 +227,62 @@ const deleteAddress = async (userId, addressId) => {
 
     return addressId
 }
+// update-address
+const updateAddress = async (userId, addressId, addressData) => {
+    const user = await User.findById(userId)
+
+    if (!user) {
+        const error = new Error('User not found')
+        error.statusCode = 404
+        throw error
+    }
+
+    const address = user.addresses.id(addressId)
+
+    if (!address) {
+        const error = new Error('Address not found')
+        error.statusCode = 404
+        throw error
+    }
+
+    const {
+        fullName,
+        phone,
+        address: addressText,
+        city,
+        state,
+        pincode,
+    } = addressData
+
+    if (!fullName || !phone || !addressText || !city || !state || !pincode) {
+        const error = new Error('All address fields are required')
+        error.statusCode = 400
+        throw error
+    }
+
+    if (!/^\d{10}$/.test(phone)) {
+        const error = new Error('Please provide a valid 10-digit phone number')
+        error.statusCode = 400
+        throw error
+    }
+
+    if (!/^\d{6}$/.test(pincode)) {
+        const error = new Error('Please provide a valid 6-digit pincode')
+        error.statusCode = 400
+        throw error
+    }
+
+    address.fullName = fullName.trim()
+    address.phone = phone
+    address.address = addressText.trim()
+    address.city = city.trim()
+    address.state = state.trim()
+    address.pincode = pincode
+
+    await user.save()
+
+    return address
+}
 // Current user
 const getCurrentUser = async (userId) => {
     const user = await User.findById(userId).select(
@@ -253,5 +309,6 @@ export default {
   addAddress,
   getAddresses,
   setDefaultAddress,
-  deleteAddress
+  deleteAddress,
+  updateAddress
 };

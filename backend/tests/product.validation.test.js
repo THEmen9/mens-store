@@ -1,4 +1,5 @@
-import Product from "../models/Product.js";
+import { describe, test, expect } from "vitest"
+import Product from "../models/Product.js"
 
 const validProduct = {
   name: "Classic Cotton T-Shirt",
@@ -27,71 +28,72 @@ const validProduct = {
   seo: {
     slug: "classic-cotton-t-shirt",
   },
-};
-
-const product = new Product(validProduct);
-
-try {
-  await product.validate();
-  console.log("Product validation passed");
-} catch (error) {
-  console.error("Product validation failed:", error.message);
-  process.exitCode = 1;
 }
 
-async function expectValidationFailure(data, testName) {
-  const product = new Product({
-    ...validProduct,
-    ...data,
-  });
+describe("Product Model Validation", () => {
+  test("should validate a valid product", async () => {
+    const product = new Product(validProduct)
 
-  try {
-    await product.validate();
-    console.error(`❌ ${testName}: validation unexpectedly passed`);
-    process.exitCode = 1;
-  } catch {
-    console.log(`✅ ${testName}: validation failed as expected`);
-  }
-}
-await expectValidationFailure(
-  { price: undefined },
-  "Missing price"
-);
+    await expect(product.validate()).resolves.toBeUndefined()
+  })
 
-await expectValidationFailure(
-  {
-    variants: [
-      {
-        sku: "TS-BLK-M",
-        color: "Black",
-        size: "M",
-        stock: -1,
-      },
-    ],
-  },
-  "Negative stock"
-);
+  test("should reject missing price", async () => {
+    const product = new Product({
+      ...validProduct,
+      price: undefined,
+    })
 
-await expectValidationFailure(
-  {
-    variants: [
-      {
-        sku: "TS-BLK-M",
-        color: "Black",
-        size: "M",
-        stock: 2.5,
-      },
-    ],
-  },
-  "Decimal stock"
-);
+    await expect(product.validate()).rejects.toThrow()
+  })
 
-await expectValidationFailure(
-  { price: 999, compareAtPrice: 799 },
-  "Invalid compareAtPrice"
-);
+  test("should reject negative stock", async () => {
+    const product = new Product({
+      ...validProduct,
+      variants: [
+        {
+          sku: "TS-BLK-M",
+          color: "Black",
+          size: "M",
+          stock: -1,
+        },
+      ],
+    })
 
-await expectValidationFailure(
-  { status: "something-invalid" },
-  "Invalid status"
-);
+    await expect(product.validate()).rejects.toThrow()
+  })
+
+  test("should reject decimal stock", async () => {
+    const product = new Product({
+      ...validProduct,
+      variants: [
+        {
+          sku: "TS-BLK-M",
+          color: "Black",
+          size: "M",
+          stock: 2.5,
+        },
+      ],
+    })
+
+    await expect(product.validate()).rejects.toThrow()
+  })
+
+  test("should reject invalid compareAtPrice", async () => {
+    const product = new Product({
+      ...validProduct,
+      price: 999,
+      compareAtPrice: 799,
+    })
+
+    await expect(product.validate()).rejects.toThrow()
+  })
+
+  test("should reject invalid status", async () => {
+    const product = new Product({
+      ...validProduct,
+      status: "something-invalid",
+    })
+
+    await expect(product.validate()).rejects.toThrow()
+  })
+})

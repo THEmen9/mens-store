@@ -1,7 +1,9 @@
 import { useCart } from '../../context/CartContext'
 import { Button } from '../ui';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 function CartSummary() {
+  const navigate = useNavigate();
   const { cartItems } = useCart();
 
   const subtotal = cartItems.reduce(
@@ -40,6 +42,7 @@ function CartSummary() {
       </div>
 
      <Button
+      onClick={() => navigate('/checkout')}
       disabled={cartItems.length === 0}
       className="mt-6 w-full bg-black px-4 py-3 text-sm font-medium text-white 
       disabled:cursor-not-allowed disabled:opacity-40"

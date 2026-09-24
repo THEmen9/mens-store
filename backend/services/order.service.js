@@ -2,8 +2,10 @@ import mongoose from "mongoose"
 import Order from "../models/Order.js"
 import Product from "../models/Product.js"
 import User from "../models/User.js"
+import appError from "../utils/appError.js"
 import { decreaseStock } from "./inventory.service.js"
 
+// create-order
 async function createOrder(userId, orderData) {
   const { addressId, items } = orderData
 
@@ -125,7 +127,7 @@ async function createOrder(userId, orderData) {
     await session.endSession()
   }
 }
-
+// get-user-orders
 async function getUserOrders(userId) {
   const orders = await Order.find({
     user: userId,
@@ -133,8 +135,26 @@ async function getUserOrders(userId) {
 
   return orders
 }
+// get-order-details
+async function getOrderById(userId, orderId) {
+  if (!mongoose.isValidObjectId(orderId)) {
+    throw new appError("Invalid order id", 400)
+  }
+
+  const order = await Order.findOne({
+    _id: orderId,
+    user: userId,
+  })
+
+  if (!order) {
+     throw new appError("Order not found", 404)
+  }
+
+  return order
+}
 
 export {
   createOrder,
-  getUserOrders
+  getUserOrders,
+  getOrderById
 }

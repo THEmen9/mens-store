@@ -1,7 +1,10 @@
-import { createOrder, getUserOrders } from "../services/order.service.js"
+import {
+  createOrder,
+  getUserOrders,
+  getOrderById
+} from "../services/order.service.js"
 
-
-
+// create-order-controller
 async function createOrderController(req, res, next) {
   try {
     const order = await createOrder(req.user, req.body)
@@ -15,7 +18,7 @@ async function createOrderController(req, res, next) {
     next(error)
   }
 }
-
+// user-orders-controller
 async function getUserOrdersController(req, res, next) {
   try {
     const orders = await getUserOrders(req.user)
@@ -31,8 +34,21 @@ async function getUserOrdersController(req, res, next) {
     next(error)
   }
 }
+// order-detail-controller
+async function getOrderByIdController(req, res, next) {
+  try {
+    const order = await getOrderById(req.user, req.params.id)
 
+    res.status(200).json({
+      success: true,
+      data: order,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
 export {
   createOrderController,
   getUserOrdersController,
+  getOrderByIdController,
 }

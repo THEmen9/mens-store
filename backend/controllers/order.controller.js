@@ -1,4 +1,6 @@
-import { createOrder } from "../services/order.service.js"
+import { createOrder, getUserOrders } from "../services/order.service.js"
+
+
 
 async function createOrderController(req, res, next) {
   try {
@@ -14,6 +16,23 @@ async function createOrderController(req, res, next) {
   }
 }
 
+async function getUserOrdersController(req, res, next) {
+  try {
+    const orders = await getUserOrders(req.user)
+
+    res.status(200).json({
+      success: true,
+      data: {
+        orders,
+        totalOrders: orders.length,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
 export {
   createOrderController,
+  getUserOrdersController,
 }

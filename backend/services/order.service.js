@@ -126,6 +126,15 @@ async function createOrder(userId, orderData) {
   }
 }
 
+async function getUserOrders(userId) {
+  const orders = await Order.find({
+    user: userId,
+  }).sort({ createdAt: -1 })
+
+  return orders
+}
+
 export {
   createOrder,
+  getUserOrders
 }

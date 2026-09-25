@@ -5,11 +5,12 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui'
 
-import { OrderSummary, AddressSection, CreateOrder } from './checkout/index'
+import { OrderSummary, AddressSection, CreateOrder, OrderConfirmation } from './checkout/index'
 
 function Checkout() { 
 
   const [selectedAddressId, setSelectedAddressId] = useState(null)
+  const [createdOrder, setCreatedOrder] = useState(null)
 
   const { cartItems } = useCart()
   const { user, token } = useAuth()
@@ -46,6 +47,10 @@ function Checkout() {
     )
   }
   return (
+  <>
+    {createdOrder ? (
+      <OrderConfirmation order={createdOrder} />
+    ) : (
     <main className="px-4 py-8 md:px-8 lg:px-12">
       <section className="mx-auto max-w-7xl">
         <p className="text-sm uppercase tracking-widest text-neutral-500">
@@ -92,20 +97,25 @@ function Checkout() {
             />
           </div>
 
-          {/* Order Summary */}
-          <OrderSummary
-            cartItems={cartItems}
-            subtotal={subtotal}
-          />
-          {/* Create order */}
-          <CreateOrder
-            cartItems={cartItems}
-            selectedAddressId={selectedAddressId}
-            token={token}
-          />
+          <div>
+            {/* Order Summary */}
+            <OrderSummary
+              cartItems={cartItems}
+              subtotal={subtotal}
+            />
+            {/* Create order */}
+            <CreateOrder
+              cartItems={cartItems}
+              selectedAddressId={selectedAddressId}
+              token={token}
+              onOrderCreated={setCreatedOrder}
+            />
+          </div>
         </div>
       </section>
     </main>
+    )}
+  </>
   )
 }
 

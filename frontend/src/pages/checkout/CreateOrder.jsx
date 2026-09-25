@@ -6,9 +6,11 @@ function CreateOrder({
   cartItems,
   selectedAddressId,
   token,
+  onOrderCreated
 }) {
 
-    const [isCreatingOrder, setIsCreatingOrder] = useState(false)
+    const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+    
 
     const handleCreateOrder = async () => {
 
@@ -28,13 +30,14 @@ function CreateOrder({
         try {
         setIsCreatingOrder(true)
         const response = await createOrder(orderData, token)
-
+        onOrderCreated(response.data)
         console.log(response)
         } catch (error) {
             console.error(error.message)
+        }finally {
+        setIsCreatingOrder(false)
         }
     }
-
   return (
     <div className="mt-6">
       <Button

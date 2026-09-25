@@ -70,14 +70,19 @@ async function createOrder(userId, orderData) {
 
         const itemTotal = product.price * quantity
 
+        const primaryImage = product.images.find(
+          (image) => image.position === 0
+        )
         orderItems.push({
           product: product._id,
           variant: variant._id,
           name: product.name,
+          slug: product.seo.slug,
           sku: variant.sku,
           color: variant.color,
           size: variant.size,
           price: product.price,
+          image: primaryImage.url,
           quantity,
         })
 

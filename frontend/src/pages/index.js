@@ -1,27 +1,13 @@
-import { default as Account } from './Account';
-import { default as Cart } from './Cart';
-import { default as Collections } from './Collections';
-import { default as Home } from './Home';
-import { default as NewArrivals } from './NewArrivals';
-import { default as Shop } from './Shop';
-import { default as Wishlist } from './Wishlist';
-import { default as Search } from './Search'
-import {default as ProductDetails} from './ProductDetails'
-import {default as Checkout} from './Checkout'
-import {default as Login} from './Login'
-import {default as Register} from './Register'
-
-export {
-  Account,
-  Cart,
-  Collections,
-  Home,
-  NewArrivals,
-  Shop,
-  Wishlist,
-  Search,
-  ProductDetails,
-  Checkout,
-  Login,
-  Register
-};
+export { default as Account } from './Account';
+export { default as Cart } from './Cart';
+export { default as Collections } from './Collections';
+export { default as Home } from './Home';
+export { default as NewArrivals } from './NewArrivals';
+export { default as Shop } from './Shop';
+export { default as Wishlist } from './Wishlist';
+export { default as Search } from './Search'
+export { default as ProductDetails } from './ProductDetails'
+export { default as Checkout } from './Checkout'
+export { default as Login } from './Login'
+export { default as Register } from './Register'
+export { default as MyOrders } from './MyOrders'

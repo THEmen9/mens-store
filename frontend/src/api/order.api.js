@@ -9,3 +9,12 @@ export function createOrder(orderData, token) {
     body: JSON.stringify(orderData),
   })
 }
+
+export function getUserOrders(token) {
+  return apiClient('/orders' , {
+    method: 'GET',
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+  })
+}

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Button } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 
@@ -63,6 +63,16 @@ function Account() {
               >
                 Logout
               </Button>
+
+              <Link
+                to="/orders"
+                className="block rounded-lg border border-neutral-200 p-4"
+              >
+                <p className="text-sm font-medium">Orders</p>
+                <p className="mt-1 text-sm text-neutral-500">
+                  View your orders
+                </p>
+              </Link>
             </div>
           </section>
 

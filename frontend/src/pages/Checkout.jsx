@@ -1,12 +1,16 @@
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui'
 
-import { OrderSummary, AddressSection } from './checkout/index'
+import { OrderSummary, AddressSection, CreateOrder } from './checkout/index'
 
 function Checkout() { 
+
+  const [selectedAddressId, setSelectedAddressId] = useState(null)
+
   const { cartItems } = useCart()
   const { user, token } = useAuth()
   const navigate = useNavigate()
@@ -84,6 +88,7 @@ function Checkout() {
             <AddressSection
               user={user}
               token={token}
+              onAddressSelect={setSelectedAddressId}
             />
           </div>
 
@@ -91,6 +96,12 @@ function Checkout() {
           <OrderSummary
             cartItems={cartItems}
             subtotal={subtotal}
+          />
+          {/* Create order */}
+          <CreateOrder
+            cartItems={cartItems}
+            selectedAddressId={selectedAddressId}
+            token={token}
           />
         </div>
       </section>

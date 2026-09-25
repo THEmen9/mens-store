@@ -11,7 +11,7 @@ import {
 
 import {AddressCard, AddressForm} from './index'
 
-function AddressSection({ user, token }) {
+function AddressSection({ user, token, onAddressSelect }) {
     
   const [address, setAddress] = useState({
     fullName: user?.name || '',
@@ -153,6 +153,7 @@ function AddressSection({ user, token }) {
 
         setSelectedAddressId(defaultAddress._id)
         setAddress(defaultAddress)
+        onAddressSelect(defaultAddress._id)
       }
     } catch (error) {
       setAddressError(error.message)
@@ -180,8 +181,11 @@ function AddressSection({ user, token }) {
 
         setSelectedAddressId(defaultAddress._id)
         setAddress(defaultAddress)
+        onAddressSelect(defaultAddress._id)
+
       } else {
         setSelectedAddressId(null)
+        onAddressSelect(null)
         setAddress({
           fullName: user?.name || '',
           phone: '',
@@ -210,6 +214,7 @@ function AddressSection({ user, token }) {
 
           setSelectedAddressId(defaultAddress._id)
           setAddress(defaultAddress)
+          onAddressSelect(defaultAddress._id)
         }
       } catch (error) {
         console.error(error.message)

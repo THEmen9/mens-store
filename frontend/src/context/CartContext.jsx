@@ -63,7 +63,10 @@ export function CartProvider({ children }) {
     )
   )
 }
-
+// clear cart after order 
+const clearCart = () => {
+  setCartItems([])
+}
   useEffect(() => {
       localStorage.setItem('cart', JSON.stringify(cartItems))
     }, [cartItems]);
@@ -75,6 +78,7 @@ export function CartProvider({ children }) {
         addToCart,
         updateQuantity,
         removeFromCart,
+        clearCart
       }}
     >
       {children}

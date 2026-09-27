@@ -1,6 +1,9 @@
 import ItemPreview from './ItemPreview'
+import { useNavigate } from 'react-router-dom'
+import { Button } from '../ui'
 
 function OrderCard({ order }) {
+  const navigate = useNavigate()
   return (
     <article className="rounded-2xl  border border-neutral-200 bg-white p-5">
       {/* Header */}
@@ -41,12 +44,13 @@ function OrderCard({ order }) {
           </p>
         </div>
 
-        <button
+        <Button
+          onClick={() => {navigate(`/orders/${order._id}`)}}
           type="button"
           className="text-sm font-medium"
         >
           View Details
-        </button>
+        </Button>
       </div>
     </article>
   )

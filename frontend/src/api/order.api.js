@@ -18,3 +18,12 @@ export function getUserOrders(token) {
     },
   })
 }
+
+export function getOrderById(orderId, token) {
+  return apiClient(`/orders/${orderId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}

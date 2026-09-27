@@ -1,6 +1,7 @@
 import { Button } from '../../components/ui'
 import { createOrder } from '../../api/order.api'
 import { useState } from 'react'
+import { useCart } from '../../context/CartContext'
 
 function CreateOrder({
   cartItems,
@@ -8,7 +9,7 @@ function CreateOrder({
   token,
   onOrderCreated
 }) {
-
+    const { clearCart } = useCart();
     const [isCreatingOrder, setIsCreatingOrder] = useState(false);
     
 
@@ -28,12 +29,16 @@ function CreateOrder({
         }
 
         try {
+
         setIsCreatingOrder(true)
-        const response = await createOrder(orderData, token)
+        const response = await createOrder(orderData, token);
+        clearCart()
         onOrderCreated(response.data)
         console.log(response)
+
         } catch (error) {
             console.error(error.message)
+            
         }finally {
         setIsCreatingOrder(false)
         }

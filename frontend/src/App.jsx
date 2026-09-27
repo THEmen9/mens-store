@@ -15,7 +15,8 @@ import {
   Checkout,
   Login,
   Register,
-  MyOrders
+  MyOrders,
+  OrderDetails
 } from './pages';
 
 function App() {
@@ -30,10 +31,11 @@ function App() {
         <Route path="/collections" element={<Collections />} />
         <Route path="/new-arrivals" element={<NewArrivals />} />
         <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
-        <Route path="/orders" element={<MyOrders />} />
+        <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+        <Route path="/orders/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute> }/>
         <Route path="/search" element={<Search />} />
         <Route path="/products/:slug" element={<ProductDetails />} />
         <Route path='/register' element= {<Register />}/>

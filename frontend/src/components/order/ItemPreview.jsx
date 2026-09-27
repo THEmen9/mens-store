@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 
-function ItemPreview({ item, order }) {
+function ItemPreview({ item, order, onCancel  }) {
   const navigate = useNavigate()
 
   const createdAt = new Date(order.createdAt)
@@ -8,9 +8,15 @@ function ItemPreview({ item, order }) {
     createdAt.getTime() + 24 * 60 * 60 * 1000
   )
 
+  const cancellableStatuses = [
+    "pending",
+    "confirmed",
+    "processing",
+  ]
+
   const canCancel =
     new Date() < cancelDeadline &&
-    order.orderStatus !== "shipped"
+    cancellableStatuses.includes(order.orderStatus)
 
   return (
     <div className="flex gap-4">
@@ -48,6 +54,7 @@ function ItemPreview({ item, order }) {
         {canCancel && (
           <button
             type="button"
+             onClick={() => onCancel(order._id)}
             className="mt-3 text-sm font-medium"
           >
             Cancel

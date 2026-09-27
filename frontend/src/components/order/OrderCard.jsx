@@ -2,7 +2,7 @@ import ItemPreview from './ItemPreview'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../ui'
 
-function OrderCard({ order }) {
+function OrderCard({ order, onCancel }) {
   const navigate = useNavigate()
   return (
     <article className="rounded-2xl  border border-neutral-200 bg-white p-5">
@@ -28,6 +28,7 @@ function OrderCard({ order }) {
             key={item._id}
             item={item}
             order={order}
+            onCancel={onCancel}
           />
         ))}
       </div>

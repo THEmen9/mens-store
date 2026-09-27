@@ -18,7 +18,7 @@ const decreaseStock = async (productId, variantId, quantity, session = null) => 
       },
     },
     {
-      new: true,
+      returnDocument: true,
       ...(session && { session }),
     }
   )
@@ -30,7 +30,7 @@ const decreaseStock = async (productId, variantId, quantity, session = null) => 
   return product
 }
 
-const increaseStock = async (productId, variantId, quantity) => {
+const increaseStock = async (productId, variantId, quantity, session = null) => {
   if (!Number.isInteger(quantity) || quantity < 1) {
     throw new Error("Quantity must be a positive integer")
   }
@@ -46,7 +46,8 @@ const increaseStock = async (productId, variantId, quantity) => {
       },
     },
     {
-      new: true,
+      returnDocument: true,
+       ...(session && { session }),
     }
   )
 

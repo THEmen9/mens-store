@@ -3,7 +3,8 @@ import authMiddleware from "../middleware/auth.middleware.js"
 import {
     createOrderController,
     getUserOrdersController,
-    getOrderByIdController
+    getOrderByIdController,
+    cancelOrderController
     } from "../controllers/order.controller.js"
 
 const router = express.Router()
@@ -11,6 +12,8 @@ const router = express.Router()
 router.post("/", authMiddleware, createOrderController);
 // get-user-orders
 router.get("/", authMiddleware, getUserOrdersController);
+// order cancel
+router.post("/:id/cancel", authMiddleware, cancelOrderController);
 // get-order-details
 router.get("/:id", authMiddleware, getOrderByIdController);
 

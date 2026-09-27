@@ -3,7 +3,7 @@ import Order from "../models/Order.js"
 import Product from "../models/Product.js"
 import User from "../models/User.js"
 import appError from "../utils/appError.js"
-import { decreaseStock } from "./inventory.service.js"
+import { decreaseStock, increaseStock } from "./inventory.service.js"
 
 // create-order
 async function createOrder(userId, orderData) {
@@ -140,6 +140,66 @@ async function getUserOrders(userId) {
 
   return orders
 }
+// cancel-order
+async function cancelOrder(userId, orderId) {
+  if (!mongoose.isValidObjectId(orderId)) {
+    throw new appError("Invalid order id", 400)
+  }
+
+  const session = await mongoose.startSession()
+
+  try {
+    let cancelledOrder
+
+    await session.withTransaction(async () => {
+      const order = await Order.findOne({
+        _id: orderId,
+        user: userId,
+      }).session(session)
+
+      if (!order) {
+        throw new appError("Order not found", 404)
+      }
+
+      const cancellableStatuses = [
+        "pending",
+        "confirmed",
+        "processing",
+      ]
+
+      if (!cancellableStatuses.includes(order.orderStatus)) {
+        throw new appError(
+          "Order cannot be cancelled at this stage",
+          400
+        )
+      }
+
+      for (const item of order.items) {
+        await increaseStock(
+          item.product,
+          item.variant,
+          item.quantity,
+          session
+        )
+      }
+
+      order.orderStatus = "cancelled"
+
+      order.statusHistory.push({
+        status: "cancelled",
+        timestamp: new Date(),
+      })
+
+      await order.save({ session })
+
+      cancelledOrder = order
+    })
+
+    return cancelledOrder
+  } finally {
+    await session.endSession()
+  }
+}
 // get-order-details
 async function getOrderById(userId, orderId) {
   if (!mongoose.isValidObjectId(orderId)) {
@@ -161,5 +221,6 @@ async function getOrderById(userId, orderId) {
 export {
   createOrder,
   getUserOrders,
+  cancelOrder,
   getOrderById
 }

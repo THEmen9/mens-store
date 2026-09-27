@@ -19,6 +19,15 @@ export function getUserOrders(token) {
   })
 }
 
+export function cancelOrder(orderId, token) {
+  return apiClient(`/orders/${orderId}/cancel`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function getOrderById(orderId, token) {
   return apiClient(`/orders/${orderId}`, {
     method: 'GET',

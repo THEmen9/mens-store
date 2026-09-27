@@ -1,7 +1,8 @@
 import {
   createOrder,
   getUserOrders,
-  getOrderById
+  getOrderById,
+  cancelOrder
 } from "../services/order.service.js"
 
 // create-order-controller
@@ -47,8 +48,23 @@ async function getOrderByIdController(req, res, next) {
     next(error)
   }
 }
+// cancel-order-controller
+async function cancelOrderController(req, res, next) {
+  try {
+    const order = await cancelOrder(req.user, req.params.id)
+
+    res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      data: order,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
 export {
   createOrderController,
   getUserOrdersController,
   getOrderByIdController,
+  cancelOrderController
 }

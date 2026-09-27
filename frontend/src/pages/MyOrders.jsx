@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { useAuth } from '../context/AuthContext'
-import { getUserOrders } from '../api/order.api'
+import { cancelOrder, getUserOrders } from '../api/order.api'
 import OrderCard from "../components/order/OrderCard"
 
 function MyOrders() {
@@ -10,6 +10,24 @@ function MyOrders() {
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const handleCancelOrder = async (orderId) => {
+    try {
+      setError(null)
+
+      const response = await cancelOrder(orderId, token)
+
+      setOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order._id === orderId
+            ? response.data
+            : order
+        )
+      )
+    } catch (error) {
+      setError(error.message)
+    }
+  }
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -53,6 +71,7 @@ function MyOrders() {
             <OrderCard
                 key={order._id}
                 order={order}
+                onCancel={handleCancelOrder}
             />
         ))}
         </div>

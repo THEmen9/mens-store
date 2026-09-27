@@ -12,6 +12,7 @@ function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState(null)
   const [createdOrder, setCreatedOrder] = useState(null)
 
+ // state...
   const { cartItems } = useCart()
   const { user, token } = useAuth()
   const navigate = useNavigate()
@@ -21,6 +22,12 @@ function Checkout() {
     0
   )
 
+  // Order successfully created
+  if (createdOrder) {
+    return <OrderConfirmation order={createdOrder} />
+  }
+  
+  // No order + cart empty
   if (cartItems.length === 0) {
     return (
       <main className="px-4 py-16 md:px-8 lg:px-12">
@@ -48,9 +55,6 @@ function Checkout() {
   }
   return (
   <>
-    {createdOrder ? (
-      <OrderConfirmation order={createdOrder} />
-    ) : (
     <main className="px-4 py-8 md:px-8 lg:px-12">
       <section className="mx-auto max-w-7xl">
         <p className="text-sm uppercase tracking-widest text-neutral-500">
@@ -114,7 +118,6 @@ function Checkout() {
         </div>
       </section>
     </main>
-    )}
   </>
   )
 }

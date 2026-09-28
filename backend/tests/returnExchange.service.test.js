@@ -1,7 +1,12 @@
 import { describe, test, expect, vi, beforeEach } from "vitest"
 import mongoose from "mongoose"
 
-import { createReturnExchangeRequest } from "../services/returnExchange.service.js"
+import { 
+  createReturnExchangeRequest,
+  getReturnExchangeRequestsByOrder,
+  getUserReturnExchangeRequests
+} from "../services/returnExchange.service.js"
+
 import Order from "../models/Order.js"
 import ReturnExchangeRequest from "../models/ReturnExchangeRequest.js"
 import Product from "../models/Product.js"
@@ -597,5 +602,105 @@ describe("createReturnExchangeRequest", () => {
 
     // Invalid proof must never create a request.
     expect(ReturnExchangeRequest.create).not.toHaveBeenCalled()
+  })
+})
+
+describe("getReturnExchangeRequestsByOrder", () => {
+  const userId = new mongoose.Types.ObjectId()
+  const orderId = new mongoose.Types.ObjectId()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  test("should return all return/exchange requests for the user's order", async () => {
+    const requests = [
+      {
+        _id: new mongoose.Types.ObjectId(),
+        order: orderId,
+        user: userId,
+        type: "return",
+        status: "requested",
+      },
+    ]
+
+    Order.findOne.mockResolvedValue({
+      _id: orderId,
+      user: userId,
+    })
+
+    // Simulate Mongoose query chaining: find().sort().
+    ReturnExchangeRequest.find.mockReturnValue({
+      sort: vi.fn().mockResolvedValue(requests),
+    })
+
+    const result = await getReturnExchangeRequestsByOrder(
+      userId,
+      orderId
+    )
+
+    expect(Order.findOne).toHaveBeenCalledWith({
+      _id: orderId,
+      user: userId,
+    })
+
+    expect(ReturnExchangeRequest.find).toHaveBeenCalledWith({
+      order: orderId,
+      user: userId,
+    })
+
+    expect(result).toEqual(requests)
+  })
+
+  test("should reject when the order does not belong to the user", async () => {
+    Order.findOne.mockResolvedValue(null)
+
+    await expect(
+      getReturnExchangeRequestsByOrder(userId, orderId)
+    ).rejects.toMatchObject({
+      message: "Order not found",
+      statusCode: 404,
+    })
+
+    // Do not query return/exchange requests for an unauthorized order.
+    expect(ReturnExchangeRequest.find).not.toHaveBeenCalled()
+  })
+})
+
+describe("getUserReturnExchangeRequests", () => {
+  const userId = new mongoose.Types.ObjectId()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  test("should return all return/exchange requests for the authenticated user", async () => {
+    const requests = [
+      {
+        _id: new mongoose.Types.ObjectId(),
+        user: userId,
+        type: "return",
+        status: "requested",
+      },
+      {
+        _id: new mongoose.Types.ObjectId(),
+        user: userId,
+        type: "exchange",
+        status: "completed",
+      },
+    ]
+
+    // Simulate Mongoose find().sort() query chaining.
+    ReturnExchangeRequest.find.mockReturnValue({
+      sort: vi.fn().mockResolvedValue(requests),
+    })
+
+    const result = await getUserReturnExchangeRequests(userId)
+
+    expect(ReturnExchangeRequest.find).toHaveBeenCalledWith({
+      user: userId,
+    })
+
+    expect(result).toEqual(requests)
   })
 })

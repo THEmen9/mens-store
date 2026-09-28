@@ -94,7 +94,7 @@ async function createReturnExchangeRequest(userId, requestData) {
         )
     }
 
-// Find previous return/exchange requests for this exact order item.
+    // Find previous return/exchange requests for this exact order item.
     const previousRequests = await ReturnExchangeRequest.find({
         order: order._id,
         orderItem: orderItem._id,
@@ -110,7 +110,7 @@ async function createReturnExchangeRequest(userId, requestData) {
         },
     })
 
-// An active request already owns the return/exchange process for this item.
+    // An active request already owns the return/exchange process for this item.
     const hasActiveRequest = previousRequests.some(
         (request) => request.status !== "completed"
     )
@@ -248,4 +248,44 @@ async function createReturnExchangeRequest(userId, requestData) {
     return request
 }
 
-export { createReturnExchangeRequest }
+// Fetches all return/exchange requests for an order
+async function getReturnExchangeRequestsByOrder(userId, orderId) {
+    // Validate the order ID before querying MongoDB.
+    if (!mongoose.isValidObjectId(orderId)) {
+        throw new appError("Invalid order id", 400)
+    }
+
+    // Verify that the requested order belongs to the authenticated user.
+    const order = await Order.findOne({
+        _id: orderId,
+        user: userId,
+    })
+
+    if (!order) {
+        throw new appError("Order not found", 404)
+    }
+
+    // Fetch only requests belonging to this authenticated user's order.
+    const requests = await ReturnExchangeRequest.find({
+        order: order._id,
+        user: userId,
+    }).sort({ createdAt: -1 })
+
+    return requests
+}
+
+// Fetches all return/exchange requests belonging to the authenticated user.
+async function getUserReturnExchangeRequests(userId) {
+    // Fetch only requests owned by the authenticated user.
+    const requests = await ReturnExchangeRequest.find({
+        user: userId,
+    }).sort({ createdAt: -1 })
+
+    return requests
+}
+
+export { 
+    createReturnExchangeRequest,
+    getReturnExchangeRequestsByOrder,
+    getUserReturnExchangeRequests
+}

@@ -36,3 +36,23 @@ export function getOrderById(orderId, token) {
     },
   })
 }
+
+// Fetches return/exchange requests associated with a specific order.
+export function getReturnExchangeRequestsByOrder(orderId, token) {
+  return apiClient(`/returns-exchanges/order/${orderId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+// Fetches all return/exchange requests belonging to the authenticated user.
+export function getUserReturnExchangeRequests(token) {
+  return apiClient('/returns-exchanges/my', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}

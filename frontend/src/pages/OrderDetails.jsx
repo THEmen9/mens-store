@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
-import { getOrderById } from '../api/order.api'
+import { getOrderById, getReturnExchangeRequestsByOrder } from '../api/order.api'
 
 function OrderDetails() {
   const { id } = useParams()
@@ -13,6 +13,8 @@ function OrderDetails() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const [returnExchangeRequests, setReturnExchangeRequests] = useState([])
+
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -22,11 +24,20 @@ function OrderDetails() {
         const response = await getOrderById(id, token)
 
         setOrder(response.data)
-      } catch (error) {
-        setError(error.message)
-      } finally {
-        setIsLoading(false)
-      }
+
+        // Fetch return/exchange requests only after the order is confirmed.
+        const returnExchangeResponse =
+          await getReturnExchangeRequestsByOrder(id, token)
+
+        setReturnExchangeRequests(
+          returnExchangeResponse.data.requests
+        )
+        
+        } catch (error) {
+          setError(error.message)
+        } finally {
+          setIsLoading(false)
+        }
     }
 
     if (token && id) {

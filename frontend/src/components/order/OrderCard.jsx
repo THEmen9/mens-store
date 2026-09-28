@@ -2,7 +2,7 @@ import ItemPreview from './ItemPreview'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../ui'
 
-function OrderCard({ order, onCancel }) {
+function OrderCard({ order, onCancel, returnExchangeRequests }) {
   const navigate = useNavigate()
   return (
     <article className="rounded-2xl  border border-neutral-200 bg-white p-5">
@@ -29,6 +29,7 @@ function OrderCard({ order, onCancel }) {
             item={item}
             order={order}
             onCancel={onCancel}
+            returnExchangeRequests={returnExchangeRequests}
           />
         ))}
       </div>

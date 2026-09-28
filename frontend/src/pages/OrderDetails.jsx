@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
 import { getOrderById, getReturnExchangeRequestsByOrder } from '../api/order.api'
+import {ReturnRequestDetails} from '../components/order/return-exchange/index'
 
 function OrderDetails() {
   const { id } = useParams()
@@ -32,7 +33,7 @@ function OrderDetails() {
         setReturnExchangeRequests(
           returnExchangeResponse.data.requests
         )
-        
+
         } catch (error) {
           setError(error.message)
         } finally {
@@ -119,7 +120,7 @@ function OrderDetails() {
             <article
               key={item._id}
               className="rounded-2xl border border-neutral-200 bg-white p-4"
-            >
+              >
               <div className="flex gap-4">
                 <img
                   src={item.image}
@@ -153,6 +154,20 @@ function OrderDetails() {
               >
                 View Product
               </button>
+              {/* Return requests belonging to this exact order item */}
+              {returnExchangeRequests
+                .filter(
+                  (request) =>
+                    request.orderItem === item._id &&
+                    request.type === 'return'
+                )
+                .map((request) => (
+                  <ReturnRequestDetails
+                    key={request._id}
+                    request={request}
+                    item={item}
+                  />
+                ))}
             </article>
           ))}
         </div>

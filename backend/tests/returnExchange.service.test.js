@@ -22,12 +22,14 @@ vi.mock("../models/ReturnExchangeRequest.js", () => ({
 vi.mock("../models/Order.js", () => ({
   default: {
     findOne: vi.fn(),
+    find: vi.fn(),
   },
 }))
 
 vi.mock("../models/Product.js", () => ({
   default: {
     findOne: vi.fn(),
+    find: vi.fn(),
   },
 }))
 
@@ -665,6 +667,87 @@ describe("getReturnExchangeRequestsByOrder", () => {
     // Do not query return/exchange requests for an unauthorized order.
     expect(ReturnExchangeRequest.find).not.toHaveBeenCalled()
   })
+
+  test("should return exchange variant details for an exchange request", async () => {
+    const exchangeVariantId = new mongoose.Types.ObjectId()
+    const productId = new mongoose.Types.ObjectId()
+    const orderItemId = new mongoose.Types.ObjectId()
+
+    const requests = [
+      {
+        _id: new mongoose.Types.ObjectId(),
+        order: orderId,
+        user: userId,
+        orderItem: orderItemId,
+        type: "exchange",
+        exchangeVariant: exchangeVariantId,
+        status: "requested",
+
+        // Simulate a Mongoose document returned by find().
+        toObject: vi.fn(() => ({
+          _id: requests[0]?._id,
+          order: orderId,
+          user: userId,
+          orderItem: orderItemId,
+          type: "exchange",
+          exchangeVariant: exchangeVariantId,
+          status: "requested",
+        })),
+      },
+    ]
+
+    Order.findOne.mockResolvedValue({
+      _id: orderId,
+      user: userId,
+    })
+
+    ReturnExchangeRequest.find.mockReturnValue({
+      sort: vi.fn().mockResolvedValue(requests),
+    })
+
+    Order.find.mockReturnValue({
+      select: vi.fn().mockResolvedValue([
+        {
+          _id: orderId,
+          items: {
+            id: vi.fn(() => ({
+              _id: orderItemId,
+              product: productId,
+            })),
+          },
+        },
+      ]),
+    })
+
+    Product.find.mockReturnValue({
+      select: vi.fn().mockResolvedValue([
+        {
+          _id: productId,
+          variants: {
+            id: vi.fn(() => ({
+              _id: exchangeVariantId,
+              sku: "JEANS-BLUE-32",
+              color: "Blue",
+              size: "32",
+            })),
+          },
+        },
+      ]),
+    })
+
+    const result = await getReturnExchangeRequestsByOrder(
+      userId,
+      orderId
+    )
+
+    expect(result[0].exchangeVariant).toEqual({
+      _id: exchangeVariantId,
+      sku: "JEANS-BLUE-32",
+      color: "Blue",
+      size: "32",
+    })
+  })
+
 })
 
 describe("getUserReturnExchangeRequests", () => {
@@ -703,4 +786,78 @@ describe("getUserReturnExchangeRequests", () => {
 
     expect(result).toEqual(requests)
   })
+
+  test("should return exchange variant details for the user's exchange request", async () => {
+    const orderId = new mongoose.Types.ObjectId()
+    const orderItemId = new mongoose.Types.ObjectId()
+    const productId = new mongoose.Types.ObjectId()
+    const exchangeVariantId = new mongoose.Types.ObjectId()
+
+    const requests = [
+      {
+        _id: new mongoose.Types.ObjectId(),
+        order: orderId,
+        user: userId,
+        orderItem: orderItemId,
+        type: "exchange",
+        exchangeVariant: exchangeVariantId,
+        status: "requested",
+
+        // Simulate a Mongoose document returned by find().
+        toObject: vi.fn(() => ({
+          _id: requests[0]?._id,
+          order: orderId,
+          user: userId,
+          orderItem: orderItemId,
+          type: "exchange",
+          exchangeVariant: exchangeVariantId,
+          status: "requested",
+        })),
+      },
+    ]
+
+    ReturnExchangeRequest.find.mockReturnValue({
+      sort: vi.fn().mockResolvedValue(requests),
+    })
+
+    Order.find.mockReturnValue({
+      select: vi.fn().mockResolvedValue([
+        {
+          _id: orderId,
+          items: {
+            id: vi.fn(() => ({
+              _id: orderItemId,
+              product: productId,
+            })),
+          },
+        },
+      ])
+    })
+
+    Product.find.mockReturnValue({
+      select: vi.fn().mockResolvedValue([
+        {
+          _id: productId,
+          variants: {
+            id: vi.fn(() => ({
+              _id: exchangeVariantId,
+              sku: "JEANS-BLUE-32",
+              color: "Blue",
+              size: "32",
+            })),
+          },
+        },
+      ])
+    })
+
+    const result = await getUserReturnExchangeRequests(userId)
+
+    expect(result[0].exchangeVariant).toEqual({
+      _id: exchangeVariantId,
+      sku: "JEANS-BLUE-32",
+      color: "Blue",
+      size: "32",
+    })
+  })
+
 })

@@ -248,6 +248,112 @@ async function createReturnExchangeRequest(userId, requestData) {
     return request
 }
 
+// Adds exchange variant details to exchange requests without creating
+// one database query per request.
+async function attachExchangeVariantDetails(requests, userId) {
+    const exchangeRequests = requests.filter(
+        (request) =>
+            request.type === "exchange" &&
+            request.exchangeVariant
+    )
+
+    // Return requests do not need product/variant lookup.
+    if (exchangeRequests.length === 0) {
+        return requests
+    }
+
+    // Get unique order IDs used by exchange requests.
+    const orderIds = [
+        ...new Set(
+            exchangeRequests.map((request) => request.order.toString())
+        ),
+    ]
+
+    // Fetch all required orders in one database query.
+    const orders = await Order.find({
+        _id: { $in: orderIds },
+        user: userId,
+    }).select("items")
+
+    // Map orders by ID so lookup is O(1) in memory.
+    const orderMap = new Map(
+        orders.map((order) => [order._id.toString(), order])
+    )
+
+    // Find the Product IDs required by the exchange requests.
+    const productIds = []
+
+    for (const request of exchangeRequests) {
+        const order = orderMap.get(request.order.toString())
+
+        if (!order) {
+            continue
+        }
+
+        const orderItem = order.items.id(request.orderItem)
+
+        if (orderItem?.product) {
+            productIds.push(orderItem.product.toString())
+        }
+    }
+
+    const uniqueProductIds = [...new Set(productIds)]
+
+    // Fetch all required products in one database query.
+    const products = await Product.find({
+        _id: { $in: uniqueProductIds },
+    }).select("variants")
+
+    // Map products by ID for fast in-memory lookup.
+    const productMap = new Map(
+        products.map((product) => [product._id.toString(), product])
+    )
+
+    return requests.map((request) => {
+        // Return requests keep their original response shape.
+        if (
+            request.type !== "exchange" ||
+            !request.exchangeVariant
+        ) {
+            return request.toObject()
+        }
+
+        const order = orderMap.get(request.order.toString())
+
+        if (!order) {
+            return request.toObject()
+        }
+
+        const orderItem = order.items.id(request.orderItem)
+
+        if (!orderItem?.product) {
+            return request.toObject()
+        }
+
+        const product = productMap.get(orderItem.product.toString())
+
+        if (!product) {
+            return request.toObject()
+        }
+
+        const variant = product.variants.id(request.exchangeVariant)
+
+        return {
+            ...request.toObject(),
+
+            // Keep only the variant data required by the customer UI.
+            exchangeVariant: variant
+                ? {
+                      _id: variant._id,
+                      sku: variant.sku,
+                      color: variant.color,
+                      size: variant.size,
+                  }
+                : null,
+        }
+    })
+}
+
 // Fetches all return/exchange requests for an order
 async function getReturnExchangeRequestsByOrder(userId, orderId) {
     // Validate the order ID before querying MongoDB.
@@ -271,7 +377,7 @@ async function getReturnExchangeRequestsByOrder(userId, orderId) {
         user: userId,
     }).sort({ createdAt: -1 })
 
-    return requests
+    return attachExchangeVariantDetails(requests, userId)
 }
 
 // Fetches all return/exchange requests belonging to the authenticated user.
@@ -281,7 +387,7 @@ async function getUserReturnExchangeRequests(userId) {
         user: userId,
     }).sort({ createdAt: -1 })
 
-    return requests
+    return attachExchangeVariantDetails(requests, userId)
 }
 
 export { 

@@ -56,3 +56,13 @@ export function getUserReturnExchangeRequests(token) {
     },
   })
 }
+
+// Fetches Return/Exchange eligibility for every item in a specific order.
+export function getReturnExchangeEligibility(orderId, token) {
+  return apiClient(`/returns-exchanges/order/${orderId}/eligibility`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}

@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
-import { getOrderById, getReturnExchangeRequestsByOrder } from '../api/order.api'
-import {ReturnRequestDetails, ExchangeRequestDetails} from '../components/order/return-exchange/index'
+import { getOrderById, getReturnExchangeRequestsByOrder, getReturnExchangeEligibility } from '../api/order.api'
+import {
+  ReturnRequestDetails,
+  ExchangeRequestDetails,
+  ReturnExchangeEligibility
+} from '../components/order/return-exchange/index'
 
 function OrderDetails() {
   const { id } = useParams()
@@ -14,7 +18,9 @@ function OrderDetails() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const [returnExchangeRequests, setReturnExchangeRequests] = useState([])
+  const [returnExchangeRequests, setReturnExchangeRequests] = useState([]);
+  // Stores backend-authoritative Return/Exchange eligibility for each order item.
+  const [returnExchangeEligibility, setReturnExchangeEligibility] = useState([]);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -32,6 +38,13 @@ function OrderDetails() {
 
         setReturnExchangeRequests(
           returnExchangeResponse.data.requests
+        )
+        // Fetch eligibility only after the order is confirmed.
+        const eligibilityResponse =
+          await getReturnExchangeEligibility(id, token)
+
+        setReturnExchangeEligibility(
+          eligibilityResponse.data.eligibility
         )
 
         } catch (error) {
@@ -116,7 +129,12 @@ function OrderDetails() {
         </h2>
 
         <div className="mt-4 space-y-4">
-          {order.items.map((item) => (
+          {order.items.map((item) => {
+            // Find backend-calculated eligibility for this exact order item.
+            const itemEligibility = returnExchangeEligibility.find(
+              (eligibility) => eligibility.orderItemId === item._id
+            ) 
+            return (
             <article
               key={item._id}
               className="rounded-2xl border border-neutral-200 bg-white p-4"
@@ -154,6 +172,10 @@ function OrderDetails() {
               >
                 View Product
               </button>
+              
+              {/* Backend-authoritative Return/Exchange eligibility */}
+              <ReturnExchangeEligibility eligibility={itemEligibility} />
+
               {/* Return requests belonging to this exact order item */}
               {returnExchangeRequests
                 .filter(
@@ -182,8 +204,9 @@ function OrderDetails() {
                       item={item}
                     />
                   ))}
-            </article>
-          ))}
+                </article>
+              )
+            })}
         </div>
       </div>
 

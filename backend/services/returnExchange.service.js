@@ -379,6 +379,157 @@ async function getReturnExchangeRequestsByOrder(userId, orderId) {
 
     return attachExchangeVariantDetails(requests, userId)
 }
+// Calculates Return/Exchange eligibility for every item in an order.
+// Backend remains the final authority for policy, delivery window,
+// previous requests, and remaining eligible quantity.
+async function getReturnExchangeEligibility(userId, orderId) {
+    // Validate the order ID before querying MongoDB.
+    if (!mongoose.isValidObjectId(orderId)) {
+        throw new appError("Invalid order id", 400)
+    }
+
+    // Only the authenticated user's order can be checked.
+    const order = await Order.findOne({
+        _id: orderId,
+        user: userId,
+    })
+
+    if (!order) {
+        throw new appError("Order not found", 404)
+    }
+
+    // Find the actual delivery timestamp from the order history.
+    const deliveredHistory = order.statusHistory.find(
+        (entry) => entry.status === "delivered"
+    )
+
+    const deliveredAt = deliveredHistory?.timestamp || null
+
+    // Fetch previous requests once instead of querying separately for
+    // every order item.
+    const previousRequests = await ReturnExchangeRequest.find({
+        order: order._id,
+        user: userId,
+        status: {
+            $in: [
+                "requested",
+                "approved",
+                "pickup_pending",
+                "picked_up",
+                "received",
+                "completed",
+            ],
+        },
+    })
+
+    return order.items.map((orderItem) => {
+        // Policy comes from the order-time snapshot, not the current Product.
+        const policy = orderItem.returnPolicy
+
+        // If the old order does not contain a policy snapshot, the data
+        // is incomplete and eligibility cannot be calculated safely.
+        if (!policy) {
+            throw new appError(
+                "Return/exchange policy snapshot not found",
+                500
+            )
+        }
+
+        // Find requests belonging to this exact order item.
+        const itemRequests = previousRequests.filter(
+            (request) =>
+                request.orderItem.toString() === orderItem._id.toString()
+        )
+
+        // Any non-completed request currently owns the return/exchange flow.
+        const hasActiveRequest = itemRequests.some(
+            (request) => request.status !== "completed"
+        )
+
+        // Completed requests have already consumed part of the original
+        // quantity, so only the remaining quantity can be processed.
+        const completedQuantity = itemRequests
+            .filter((request) => request.status === "completed")
+            .reduce((total, request) => total + request.quantity, 0)
+
+        const remainingQuantity = Math.max(
+            orderItem.quantity - completedQuantity,
+            0
+        )
+
+        // Without successful delivery, the return/exchange window has not started.
+        if (order.orderStatus !== "delivered" || !deliveredAt) {
+            return {
+                orderItemId: orderItem._id,
+                return: {
+                    allowed: policy.returnAllowed,
+                    eligible: false,
+                    remainingQuantity,
+                    windowStart: null,
+                    windowEnd: null,
+                    reason: "not_delivered",
+                },
+                exchange: {
+                    allowed: policy.exchangeAllowed,
+                    eligible: false,
+                    remainingQuantity,
+                    windowStart: null,
+                    windowEnd: null,
+                    reason: "not_delivered",
+                },
+            }
+        }
+
+        const windowStart = new Date(deliveredAt)
+
+        const windowEnd = new Date(
+            windowStart.getTime() +
+                policy.windowDays * 24 * 60 * 60 * 1000
+        )
+
+        const windowExpired = Date.now() > windowEnd.getTime()
+
+        // Shared eligibility reason for conditions that affect both
+        // Return and Exchange.
+        let commonReason = null
+
+        if (windowExpired) {
+            commonReason = "window_expired"
+        } else if (hasActiveRequest) {
+            commonReason = "active_request"
+        } else if (remainingQuantity === 0) {
+            commonReason = "quantity_exhausted"
+        }
+
+        return {
+            orderItemId: orderItem._id,
+
+            return: {
+                allowed: policy.returnAllowed,
+                eligible:
+                    policy.returnAllowed && commonReason === null,
+                remainingQuantity,
+                windowStart,
+                windowEnd,
+                reason: policy.returnAllowed
+                    ? commonReason
+                    : "product_policy",
+            },
+
+            exchange: {
+                allowed: policy.exchangeAllowed,
+                eligible:
+                    policy.exchangeAllowed && commonReason === null,
+                remainingQuantity,
+                windowStart,
+                windowEnd,
+                reason: policy.exchangeAllowed
+                    ? commonReason
+                    : "product_policy",
+            },
+        }
+    })
+}
 
 // Fetches all return/exchange requests belonging to the authenticated user.
 async function getUserReturnExchangeRequests(userId) {
@@ -392,6 +543,7 @@ async function getUserReturnExchangeRequests(userId) {
 
 export { 
     createReturnExchangeRequest,
+    getReturnExchangeEligibility,
     getReturnExchangeRequestsByOrder,
     getUserReturnExchangeRequests
 }

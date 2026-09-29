@@ -2,6 +2,7 @@ import express from "express"
 import authMiddleware from "../middleware/auth.middleware.js"
 import {
     createReturnExchangeController,
+    getReturnExchangeEligibilityController,
     getReturnExchangeRequestsByOrderController,
     getUserReturnExchangeRequestsController
 } from "../controllers/returnExchange.controller.js"
@@ -15,6 +16,9 @@ router.post( "/", authMiddleware, createReturnExchangeController );
 router.get( "/my", authMiddleware, getUserReturnExchangeRequestsController );
 
 // Customer fetches all return/exchange requests for a specific order.
-router.get("/order/:orderId", authMiddleware, getReturnExchangeRequestsByOrderController )
+router.get("/order/:orderId", authMiddleware, getReturnExchangeRequestsByOrderController );
+
+// Checks Return/Exchange eligibility for every item in the order.
+router.get( "/order/:orderId/eligibility", authMiddleware, getReturnExchangeEligibilityController );
 
 export default router;

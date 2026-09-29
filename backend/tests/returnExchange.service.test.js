@@ -3,6 +3,7 @@ import mongoose from "mongoose"
 
 import { 
   createReturnExchangeRequest,
+  getReturnExchangeEligibility,
   getReturnExchangeRequestsByOrder,
   getUserReturnExchangeRequests
 } from "../services/returnExchange.service.js"
@@ -53,6 +54,12 @@ describe("createReturnExchangeRequest", () => {
     _id: orderItemId,
     product: productId,
     quantity: 2,
+    // Eligibility uses the policy captured when the order was created.
+    returnPolicy: {
+      returnAllowed: true,
+      exchangeAllowed: true,
+      windowDays: 7,
+    },
     ...overrides,
   })
 
@@ -860,4 +867,302 @@ describe("getUserReturnExchangeRequests", () => {
     })
   })
 
+})
+
+describe("getReturnExchangeEligibility", () => {
+  const userId = new mongoose.Types.ObjectId()
+  const orderId = new mongoose.Types.ObjectId()
+  const orderItemId = new mongoose.Types.ObjectId()
+  const productId = new mongoose.Types.ObjectId()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  test("should mark return and exchange as eligible for a delivered order", async () => {
+    const order = {
+      _id: orderId,
+      user: userId,
+      orderStatus: "delivered",
+
+      statusHistory: [
+        {
+          status: "delivered",
+          timestamp: new Date(),
+        },
+      ],
+
+      items: [
+        {
+          _id: orderItemId,
+          product: productId,
+          quantity: 2,
+
+          // Eligibility uses the policy captured at order creation.
+          returnPolicy: {
+            returnAllowed: true,
+            exchangeAllowed: true,
+            windowDays: 7,
+          },
+        },
+      ],
+    }
+
+    Order.findOne.mockResolvedValue(order)
+
+    // No previous return/exchange request exists for this order.
+    ReturnExchangeRequest.find.mockResolvedValue([])
+
+    const result = await getReturnExchangeEligibility(
+      userId,
+      orderId
+    )
+
+    expect(result).toHaveLength(1)
+
+    expect(result[0].orderItemId).toBe(orderItemId)
+
+    expect(result[0].return.allowed).toBe(true)
+    expect(result[0].return.eligible).toBe(true)
+    expect(result[0].return.remainingQuantity).toBe(2)
+    expect(result[0].return.reason).toBeNull()
+
+    expect(result[0].exchange.allowed).toBe(true)
+    expect(result[0].exchange.eligible).toBe(true)
+    expect(result[0].exchange.remainingQuantity).toBe(2)
+    expect(result[0].exchange.reason).toBeNull()
+  })
+
+  test("should mark return and exchange as not eligible when order is not delivered", async () => {
+    const order = {
+      _id: orderId,
+      user: userId,
+      orderStatus: "processing",
+
+      statusHistory: [
+        {
+          status: "processing",
+          timestamp: new Date(),
+        },
+      ],
+
+      items: [
+        {
+          _id: orderItemId,
+          product: productId,
+          quantity: 2,
+
+          // Eligibility uses the policy captured at order creation.
+          returnPolicy: {
+            returnAllowed: true,
+            exchangeAllowed: true,
+            windowDays: 7,
+          },
+        },
+      ],
+    }
+
+    Order.findOne.mockResolvedValue(order)
+
+    // No previous return/exchange request exists for this order.
+    ReturnExchangeRequest.find.mockResolvedValue([])
+
+    const result = await getReturnExchangeEligibility(
+      userId,
+      orderId
+    )
+
+    expect(result).toHaveLength(1)
+
+    expect(result[0].orderItemId).toBe(orderItemId)
+
+    expect(result[0].return.allowed).toBe(true)
+    expect(result[0].return.eligible).toBe(false)
+    expect(result[0].return.remainingQuantity).toBe(2)
+    expect(result[0].return.reason).toBe("not_delivered")
+
+    expect(result[0].exchange.allowed).toBe(true)
+    expect(result[0].exchange.eligible).toBe(false)
+    expect(result[0].exchange.remainingQuantity).toBe(2)
+    expect(result[0].exchange.reason).toBe("not_delivered")
+
+    expect(result[0].return.windowStart).toBeNull()
+    expect(result[0].return.windowEnd).toBeNull()
+
+    expect(result[0].exchange.windowStart).toBeNull()
+    expect(result[0].exchange.windowEnd).toBeNull()
+  })
+
+  test("should make return unavailable when return is disabled by product policy", async () => {
+    const order = {
+      _id: orderId,
+      user: userId,
+      orderStatus: "delivered",
+
+      statusHistory: [
+        {
+          status: "delivered",
+          timestamp: new Date(),
+        },
+      ],
+
+      items: [
+        {
+          _id: orderItemId,
+          product: productId,
+          quantity: 2,
+
+          // Return is disabled, but exchange is still allowed.
+          returnPolicy: {
+            returnAllowed: false,
+            exchangeAllowed: true,
+            windowDays: 7,
+          },
+        },
+      ],
+    }
+
+    Order.findOne.mockResolvedValue(order)
+
+    // No previous return/exchange request exists.
+    ReturnExchangeRequest.find.mockResolvedValue([])
+
+    const result = await getReturnExchangeEligibility(
+      userId,
+      orderId
+    )
+
+    expect(result).toHaveLength(1)
+
+    expect(result[0].orderItemId).toBe(orderItemId)
+
+    // Return is blocked by the order-time product policy.
+    expect(result[0].return.allowed).toBe(false)
+    expect(result[0].return.eligible).toBe(false)
+    expect(result[0].return.remainingQuantity).toBe(2)
+    expect(result[0].return.reason).toBe("product_policy")
+
+    // Exchange remains available.
+    expect(result[0].exchange.allowed).toBe(true)
+    expect(result[0].exchange.eligible).toBe(true)
+    expect(result[0].exchange.remainingQuantity).toBe(2)
+    expect(result[0].exchange.reason).toBeNull()
+  })
+
+  test("should make exchange unavailable when exchange is disabled by product policy", async () => {
+    const order = {
+      _id: orderId,
+      user: userId,
+      orderStatus: "delivered",
+
+      statusHistory: [
+        {
+          status: "delivered",
+          timestamp: new Date(),
+        },
+      ],
+
+      items: [
+        {
+          _id: orderItemId,
+          product: productId,
+          quantity: 2,
+
+          // Exchange is disabled, but return is still allowed.
+          returnPolicy: {
+            returnAllowed: true,
+            exchangeAllowed: false,
+            windowDays: 7,
+          },
+        },
+      ],
+    }
+
+    Order.findOne.mockResolvedValue(order)
+
+    // No previous return/exchange request exists.
+    ReturnExchangeRequest.find.mockResolvedValue([])
+
+    const result = await getReturnExchangeEligibility(
+      userId,
+      orderId
+    )
+
+    expect(result).toHaveLength(1)
+
+    expect(result[0].orderItemId).toBe(orderItemId)
+
+    // Return remains available.
+    expect(result[0].return.allowed).toBe(true)
+    expect(result[0].return.eligible).toBe(true)
+    expect(result[0].return.remainingQuantity).toBe(2)
+    expect(result[0].return.reason).toBeNull()
+
+    // Exchange is blocked by the order-time product policy.
+    expect(result[0].exchange.allowed).toBe(false)
+    expect(result[0].exchange.eligible).toBe(false)
+    expect(result[0].exchange.remainingQuantity).toBe(2)
+    expect(result[0].exchange.reason).toBe("product_policy")
+  })
+
+  test("should mark return and exchange as not eligible when the return window has expired", async () => {
+    // Create a delivery date far enough in the past for the 7-day window to expire.
+    const deliveredAt = new Date(
+      Date.now() - 10 * 24 * 60 * 60 * 1000
+    )
+
+    const order = {
+      _id: orderId,
+      user: userId,
+      orderStatus: "delivered",
+
+      statusHistory: [
+        {
+          status: "delivered",
+          timestamp: deliveredAt,
+        },
+      ],
+
+      items: [
+        {
+          _id: orderItemId,
+          product: productId,
+          quantity: 2,
+
+          // The order-time policy allows both Return and Exchange.
+          returnPolicy: {
+            returnAllowed: true,
+            exchangeAllowed: true,
+            windowDays: 7,
+          },
+        },
+      ],
+    }
+
+    Order.findOne.mockResolvedValue(order)
+
+    // No previous return/exchange request exists.
+    ReturnExchangeRequest.find.mockResolvedValue([])
+
+    const result = await getReturnExchangeEligibility(
+      userId,
+      orderId
+    )
+
+    expect(result).toHaveLength(1)
+
+    expect(result[0].orderItemId).toBe(orderItemId)
+
+    // Return window has expired.
+    expect(result[0].return.allowed).toBe(true)
+    expect(result[0].return.eligible).toBe(false)
+    expect(result[0].return.remainingQuantity).toBe(2)
+    expect(result[0].return.reason).toBe("window_expired")
+
+    // Exchange window has expired as well.
+    expect(result[0].exchange.allowed).toBe(true)
+    expect(result[0].exchange.eligible).toBe(false)
+    expect(result[0].exchange.remainingQuantity).toBe(2)
+    expect(result[0].exchange.reason).toBe("window_expired")
+  })
 })

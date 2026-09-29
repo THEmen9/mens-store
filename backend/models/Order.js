@@ -65,6 +65,26 @@ const orderItemSchema = new mongoose.Schema(
         message: "Quantity must be a whole number",
       },
     },
+
+    // Snapshot the product's return/exchange policy at order creation.
+    // This keeps historical orders independent from future product-policy changes.
+    returnPolicy: {
+      returnAllowed: {
+        type: Boolean,
+        required: true,
+      },
+
+      exchangeAllowed: {
+        type: Boolean,
+        required: true,
+      },
+
+      windowDays: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
+    },
   }
 );
 

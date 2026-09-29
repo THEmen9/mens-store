@@ -166,6 +166,22 @@ const productSchema = new mongoose.Schema(
         unique: true,
       },
     },
+    // return/exhange policy
+    returnPolicy: {
+      returnAllowed: {
+        type: Boolean,
+        default: true,
+      },
+      exchangeAllowed: {
+        type: Boolean,
+        default: true,
+      },
+      windowDays: {
+        type: Number,
+        default: 7,
+        min: 1,
+      },
+    },
   },
   {
     timestamps: true,

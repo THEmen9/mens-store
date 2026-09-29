@@ -84,6 +84,12 @@ async function createOrder(userId, orderData) {
           price: product.price,
           image: primaryImage.url,
           quantity,
+          // Snapshot the product policy so future admin changes do not affect this order.
+          returnPolicy: {
+            returnAllowed: product.returnPolicy.returnAllowed,
+            exchangeAllowed: product.returnPolicy.exchangeAllowed,
+            windowDays: product.returnPolicy.windowDays,
+          }
         })
 
         subtotal += itemTotal

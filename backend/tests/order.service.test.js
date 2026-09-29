@@ -66,6 +66,26 @@ describe("Order Service - createOrder", () => {
     _id: productId,
     name: "Classic Black T-Shirt",
     price: 999,
+     // createOrder saves the primary image in the order-item snapshot.
+    images: [
+      {
+        url: "https://example.com/classic-black-tshirt.jpg",
+        position: 0,
+      },
+    ],
+
+    // createOrder also saves the product slug in the order-item snapshot.
+    seo: {
+      slug: "classic-black-t-shirt",
+    },
+
+    // Simulates the product policy copied into the order-item snapshot.
+    returnPolicy: {
+      returnAllowed: true,
+      exchangeAllowed: true,
+      windowDays: 7,
+    },
+    
     variants: {
       id: vi.fn(() => variant),
     },

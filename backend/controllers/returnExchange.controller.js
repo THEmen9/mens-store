@@ -1,5 +1,6 @@
 import { 
     createReturnExchangeRequest,
+    getReturnExchangeEligibility,
     getReturnExchangeRequestsByOrder,
     getUserReturnExchangeRequests
 } from "../services/returnExchange.service.js"
@@ -42,6 +43,25 @@ async function getReturnExchangeRequestsByOrderController(req, res, next) {
         next(error)
     }
 }
+// Fetches Return/Exchange eligibility for every item in a specific order.
+async function getReturnExchangeEligibilityController(req, res, next) {
+    try {
+        const eligibility = await getReturnExchangeEligibility(
+            req.user,
+            req.params.orderId
+        )
+
+        res.status(200).json({
+            success: true,
+            data: {
+                eligibility,
+            },
+        })
+    } catch (error) {
+        // Pass service errors to the centralized error handler.
+        next(error)
+    }
+}
 // Fetches all return/exchange requests belonging to the authenticated user.
 async function getUserReturnExchangeRequestsController(req, res, next) {
     try {
@@ -61,6 +81,7 @@ async function getUserReturnExchangeRequestsController(req, res, next) {
 
 export { 
     createReturnExchangeController,
+    getReturnExchangeEligibilityController,
     getReturnExchangeRequestsByOrderController,
     getUserReturnExchangeRequestsController
  };

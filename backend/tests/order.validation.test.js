@@ -10,11 +10,19 @@ describe("Order Model Validation", () => {
         product: new mongoose.Types.ObjectId(),
         variant: new mongoose.Types.ObjectId(),
         name: "Classic Black T-Shirt",
+        //  Order stores a snapshot of the product URL/slug
+        slug: "classic-black-t-shirt",
+        image: "https://example.com/classic-black-tshirt.jpg",
         sku: "TS-BLK-M",
         color: "Black",
         size: "M",
         price: 999,
         quantity: 2,
+        returnPolicy: {
+          returnAllowed: true,
+          exchangeAllowed: true,
+          windowDays: 7,
+        },
       },
     ],
     shippingAddress: {

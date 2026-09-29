@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
 import { getOrderById, getReturnExchangeRequestsByOrder } from '../api/order.api'
-import {ReturnRequestDetails} from '../components/order/return-exchange/index'
+import {ReturnRequestDetails, ExchangeRequestDetails} from '../components/order/return-exchange/index'
 
 function OrderDetails() {
   const { id } = useParams()
@@ -168,6 +168,20 @@ function OrderDetails() {
                     item={item}
                   />
                 ))}
+                {/* Exchange requests belonging to this exact order item */}
+                {returnExchangeRequests
+                  .filter(
+                    (request) =>
+                      request.orderItem === item._id &&
+                      request.type === 'exchange'
+                  )
+                  .map((request) => (
+                    <ExchangeRequestDetails
+                      key={request._id}
+                      request={request}
+                      item={item}
+                    />
+                  ))}
             </article>
           ))}
         </div>

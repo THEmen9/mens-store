@@ -172,9 +172,12 @@ function OrderDetails() {
               >
                 View Product
               </button>
-              
+
               {/* Backend-authoritative Return/Exchange eligibility */}
-              <ReturnExchangeEligibility eligibility={itemEligibility} />
+              <ReturnExchangeEligibility
+                eligibility={itemEligibility}
+                productId={item.product}
+              />
 
               {/* Return requests belonging to this exact order item */}
               {returnExchangeRequests

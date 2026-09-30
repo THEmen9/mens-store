@@ -92,10 +92,12 @@ describe("ReturnExchangeRequest model", () => {
     const request = new ReturnExchangeRequest({
       ...validData,
       proof: [
-        {
-          url: "https://example.com/damage.jpg",
-          type: "image",
-        },
+          {
+              url: "https://example.com/proof.jpg",
+              type: "image",
+              publicId: "return-exchange/proof-123",
+              resourceType: "image",
+          },
       ],
     })
 

@@ -17,7 +17,7 @@ async function createReturnExchangeRequest(userId, requestData) {
         reason,
         comment,
         proof = [],
-        exchangeVariant,
+        exchangeVariant
     } = requestData
 
     // Validate IDs before querying MongoDB.
@@ -53,8 +53,8 @@ async function createReturnExchangeRequest(userId, requestData) {
         400
         )
     }
-
-    // Get the timestamp when the order was marked as delivered.
+    // Delivery timestamp
+    // The return/exchange window starts from the actual delivery event.
     const deliveredHistory = order.statusHistory.find(
         (entry) => entry.status === "delivered"
     )
@@ -63,22 +63,49 @@ async function createReturnExchangeRequest(userId, requestData) {
         throw new appError("Delivery date not found", 400)
     }
 
-    // Return/exchange window is valid for 7 days from delivery.
-    const returnWindowMs = 7 * 24 * 60 * 60 * 1000
+    // Order item validation
+    const orderItem = order.items.id(orderItemId)
+
+    if (!orderItem) {
+        throw new appError("Order item not found", 404)
+    }
+
+    //  Return/Exchange policy validation
+    const policy = orderItem.returnPolicy
+
+    if (!policy) {
+        throw new appError(
+            "Return/exchange policy snapshot not found",
+            500
+        )
+    }
+
+    if (type === "return" && !policy.returnAllowed) {
+        throw new appError(
+            "Returns are not allowed for this item",
+            400
+        )
+    }
+
+    if (type === "exchange" && !policy.exchangeAllowed) {
+        throw new appError(
+            "Exchanges are not allowed for this item",
+            400
+        )
+    }
+    // Return/Exchange window
+    const returnWindowMs =
+        policy.windowDays * 24 * 60 * 60 * 1000
 
     const returnWindowExpired =
         Date.now() >
         deliveredHistory.timestamp.getTime() + returnWindowMs
 
     if (returnWindowExpired) {
-        throw new appError("Return or exchange window has expired", 400)
-    }
-
-    // Find the exact item inside the order.
-    const orderItem = order.items.id(orderItemId)
-
-    if (!orderItem) {
-        throw new appError("Order item not found", 404)
+        throw new appError(
+            "Return or exchange window has expired",
+            400
+        )
     }
 
     // Requested quantity must be a positive whole number.
@@ -148,6 +175,8 @@ async function createReturnExchangeRequest(userId, requestData) {
         throw new appError("Invalid return or exchange reason", 400)
     }
 
+    // ==================== Proof Validation ====================
+
     // Only image and video proof types are allowed.
     const validProofTypes = ["image", "video"]
 
@@ -155,23 +184,30 @@ async function createReturnExchangeRequest(userId, requestData) {
         throw new appError("Invalid proof", 400)
     }
 
-    const hasInvalidProofUrl = proof.some(
-        (item) =>
+    // Every proof item must contain valid Cloudinary metadata.
+    for (const item of proof) {
+        if (
             !item ||
             typeof item.url !== "string" ||
             item.url.trim().length === 0
-    )
+        ) {
+            throw new appError("Invalid proof url", 400)
+        }
 
-    if (hasInvalidProofUrl) {
-        throw new appError("Invalid proof url", 400)
-    }
+        if (
+            typeof item.publicId !== "string" ||
+            item.publicId.trim().length === 0
+        ) {
+            throw new appError("Invalid proof public id", 400)
+        }
 
-    const hasInvalidProofType = proof.some(
-        (item) => !validProofTypes.includes(item.type)
-    )
+        if (!validProofTypes.includes(item.type)) {
+            throw new appError("Invalid proof type", 400)
+        }
 
-    if (hasInvalidProofType) {
-        throw new appError("Invalid proof type", 400)
+        if (!validProofTypes.includes(item.resourceType)) {
+            throw new appError("Invalid proof resource type", 400)
+        }
     }
 
     // A request can contain at most 4 proof images.
@@ -220,7 +256,11 @@ async function createReturnExchangeRequest(userId, requestData) {
         const variant = product.variants.id(exchangeVariant)
 
         if (!variant) {
-        throw new appError("Invalid exchange variant", 400)
+            throw new appError("Invalid exchange variant", 400)
+        }
+        // Exchange target must have stock available at request time.
+        if (variant.stock <= 0) {
+            throw new appError("Exchange variant is out of stock", 400)
         }
     }
 
@@ -380,8 +420,6 @@ async function getReturnExchangeRequestsByOrder(userId, orderId) {
     return attachExchangeVariantDetails(requests, userId)
 }
 // Calculates Return/Exchange eligibility for every item in an order.
-// Backend remains the final authority for policy, delivery window,
-// previous requests, and remaining eligible quantity.
 async function getReturnExchangeEligibility(userId, orderId) {
     // Validate the order ID before querying MongoDB.
     if (!mongoose.isValidObjectId(orderId)) {

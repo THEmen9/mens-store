@@ -50,6 +50,15 @@ describe("createReturnExchangeRequest", () => {
     ...overrides,
   })
 
+  // Simulates the metadata returned by the Cloudinary upload step.
+  const createProof = (overrides = {}) => ({
+      url: "https://example.com/proof.jpg",
+      type: "image",
+      publicId: "return-exchange/proof-123",
+      resourceType: "image",
+      ...overrides,
+  })
+
   const createOrderItem = (overrides = {}) => ({
     _id: orderItemId,
     product: productId,
@@ -63,25 +72,28 @@ describe("createReturnExchangeRequest", () => {
     ...overrides,
   })
 
-  const createOrder = (overrides = {}) => ({
-    _id: orderId,
-    user: userId,
-    orderStatus: "delivered",
+  const createOrder = (
+      overrides = {},
+      orderItemOverrides = {} ) => ({
+        _id: orderId,
+        user: userId,
+        orderStatus: "delivered",
 
-    // Delivery timestamp is required for the 7-day return window.
-    statusHistory: [
-      {
-        status: "delivered",
-        timestamp: new Date(),
+      // Delivery timestamp is required for the return/exchange window.
+      statusHistory: [
+          {
+              status: "delivered",
+              timestamp: new Date(),
+          },
+      ],
+
+      // Simulate Mongoose's document-array id() helper.
+      // Allow individual tests to override the item's policy snapshot.
+      items: {
+          id: vi.fn(() => createOrderItem(orderItemOverrides)),
       },
-    ],
 
-    // Simulate Mongoose's document-array id() helper.
-    items: {
-      id: vi.fn(() => createOrderItem()),
-    },
-
-    ...overrides,
+      ...overrides,
   })
 
   const createProduct = (variant = { _id: exchangeVariantId }) => ({
@@ -167,11 +179,10 @@ describe("createReturnExchangeRequest", () => {
 
   test("should preserve optional comment and required proof", async () => {
     const proof = [
-      {
-        url: "https://example.com/damaged-product.jpg",
-        type: "image",
-      },
-    ]
+      createProof({
+          url: "https://example.com/damaged-product.jpg",
+      }),
+  ]
 
     const result = await createReturnExchangeRequest(
       userId,
@@ -365,10 +376,9 @@ describe("createReturnExchangeRequest", () => {
 
   test("should reject invalid proof type", async () => {
     const proof = [
-      {
-        url: "https://example.com/proof.pdf",
-        type: "document",
-      },
+        createProof({
+          type: "document",
+      }),
     ]
 
     await expect(
@@ -388,10 +398,11 @@ describe("createReturnExchangeRequest", () => {
   })
 
   test("should reject more than 4 proof images", async () => {
-    const proof = Array.from({ length: 5 }, (_, index) => ({
-      url: `https://example.com/image-${index + 1}.jpg`,
-      type: "image",
-    }))
+    const proof = Array.from({ length: 5 }, (_, index) =>
+      createProof({
+          url: `https://example.com/image-${index + 1}.jpg`,
+      })
+  )
 
     await expect(
       createReturnExchangeRequest(
@@ -411,14 +422,18 @@ describe("createReturnExchangeRequest", () => {
 
   test("should reject more than 1 proof video", async () => {
     const proof = [
-      {
-        url: "https://example.com/video-1.mp4",
-        type: "video",
-      },
-      {
-        url: "https://example.com/video-2.mp4",
-        type: "video",
-      },
+      createProof({
+          url: "https://example.com/video-1.mp4",
+          type: "video",
+          publicId: "return-exchange/video-1",
+          resourceType: "video",
+      }),
+      createProof({
+          url: "https://example.com/video-2.mp4",
+          type: "video",
+          publicId: "return-exchange/video-2",
+          resourceType: "video",
+      }),
     ]
 
     await expect(
@@ -474,6 +489,32 @@ describe("createReturnExchangeRequest", () => {
       statusCode: 400,
     })
 
+    expect(ReturnExchangeRequest.create).not.toHaveBeenCalled()
+  })//
+
+  test("should reject exchange variant when stock is unavailable", async () => {
+    // Simulate a valid exchange variant that currently has no stock.
+    Product.findOne.mockResolvedValue(
+        createProduct({
+            _id: exchangeVariantId,
+            stock: 0,
+        })
+    )
+
+    await expect(
+        createReturnExchangeRequest(
+            userId,
+            createRequestData({
+                type: "exchange",
+                exchangeVariant: exchangeVariantId,
+            })
+        )
+    ).rejects.toMatchObject({
+        message: "Exchange variant is out of stock",
+        statusCode: 400,
+    })
+
+    // An unavailable variant must never create an exchange request.
     expect(ReturnExchangeRequest.create).not.toHaveBeenCalled()
   })
 
@@ -590,10 +631,9 @@ describe("createReturnExchangeRequest", () => {
 
   test("should reject proof without a valid url", async () => {
     const proof = [
-      {
-        type: "image",
-        // URL intentionally missing.
-      },
+        createProof({
+            url: "",
+        }),
     ]
 
     await expect(
@@ -611,6 +651,130 @@ describe("createReturnExchangeRequest", () => {
 
     // Invalid proof must never create a request.
     expect(ReturnExchangeRequest.create).not.toHaveBeenCalled()
+  })
+
+  // --- RETURN / EXCHANGE POLICY VALIDATION ---
+  test("should reject return when return policy does not allow returns", async () => {
+      Order.findOne.mockResolvedValue(
+          createOrder(
+              {},
+              {
+                  returnPolicy: {
+                      returnAllowed: false,
+                      exchangeAllowed: true,
+                      windowDays: 7,
+                  },
+              }
+          )
+      )
+
+      await expect(
+          createReturnExchangeRequest(
+              userId,
+              createRequestData({
+                  type: "return",
+              })
+          )
+      ).rejects.toMatchObject({
+          message: "Returns are not allowed for this item",
+          statusCode: 400,
+      })
+
+      // Policy rejection must happen before request creation.
+      expect(ReturnExchangeRequest.create).not.toHaveBeenCalled()
+  })
+
+  test("should reject exchange when exchange policy does not allow exchanges", async () => {
+      Order.findOne.mockResolvedValue(
+          createOrder(
+              {},
+              {
+                  returnPolicy: {
+                      returnAllowed: true,
+                      exchangeAllowed: false,
+                      windowDays: 7,
+                  },
+              }
+          )
+      )
+
+      await expect(
+          createReturnExchangeRequest(
+              userId,
+              createRequestData({
+                  type: "exchange",
+                  exchangeVariant: exchangeVariantId,
+              })
+          )
+      ).rejects.toMatchObject({
+          message: "Exchanges are not allowed for this item",
+          statusCode: 400,
+      })
+
+      // Policy rejection must happen before request creation.
+      expect(ReturnExchangeRequest.create).not.toHaveBeenCalled()
+  })
+
+  test("should reject when return/exchange policy snapshot is missing", async () => {
+      Order.findOne.mockResolvedValue(
+          createOrder(
+              {},
+              {
+                  returnPolicy: undefined,
+              }
+          )
+      )
+
+      await expect(
+          createReturnExchangeRequest(
+              userId,
+              createRequestData()
+          )
+      ).rejects.toMatchObject({
+          message: "Return/exchange policy snapshot not found",
+          statusCode: 500,
+      })
+
+      // Missing policy must never allow request creation.
+      expect(ReturnExchangeRequest.create).not.toHaveBeenCalled()
+  })
+
+  test("should use the return policy window instead of a hardcoded 7-day window", async () => {
+    const deliveredAt = new Date(
+        Date.now() - 8 * 24 * 60 * 60 * 1000
+    )
+
+    Order.findOne.mockResolvedValue(
+        createOrder(
+            {
+                statusHistory: [
+                    {
+                        status: "delivered",
+                        timestamp: deliveredAt,
+                    },
+                ],
+            },
+            {
+                returnPolicy: {
+                    returnAllowed: true,
+                    exchangeAllowed: true,
+
+                    // 30-day policy should still allow a request
+                    // even though delivery was 8 days ago.
+                    windowDays: 30,
+                },
+            }
+        )
+    )
+
+    const result = await createReturnExchangeRequest(
+        userId,
+        createRequestData()
+    )
+
+    expect(result).toBeDefined()
+
+    expect(ReturnExchangeRequest.create).toHaveBeenCalled()
   })
 })
 
@@ -1165,4 +1329,5 @@ describe("getReturnExchangeEligibility", () => {
     expect(result[0].exchange.remainingQuantity).toBe(2)
     expect(result[0].exchange.reason).toBe("window_expired")
   })
+
 })

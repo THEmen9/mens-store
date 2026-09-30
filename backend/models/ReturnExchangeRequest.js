@@ -13,6 +13,20 @@ const proofSchema = new mongoose.Schema(
       enum: ["image", "video"],
       required: true,
     },
+
+    // Cloudinary identifier used for future asset cleanup.
+    publicId: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    // Cloudinary resource type required when deleting the asset.
+    resourceType: {
+      type: String,
+      enum: ["image", "video"],
+      required: true,
+    },
   },
   {
     _id: false,

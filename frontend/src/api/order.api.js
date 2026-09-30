@@ -66,3 +66,19 @@ export function getReturnExchangeEligibility(orderId, token) {
     },
   })
 }
+
+// Upload Return/Exchange proof
+
+export function uploadReturnExchangeProof(file, token) {
+    const formData = new FormData()
+
+    formData.append("file", file)
+
+    return apiClient("/uploads/return-exchange-proof", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+    })
+}

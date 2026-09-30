@@ -6,6 +6,7 @@ import errorHandler from "./middleware/error.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
 import orderRoutes from "./routes/order.routes.js"
 import returnExchangeRoutes from "./routes/returnExchange.routes.js"
+import uploadRoutes from "./routes/upload.routes.js"
 
 
 const app = express();
@@ -26,8 +27,9 @@ app.get("/", (req, res) => {
 
 app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/orders", orderRoutes)
-app.use("/api/returns-exchanges", returnExchangeRoutes)
+app.use("/api/orders", orderRoutes);
+app.use("/api/returns-exchanges", returnExchangeRoutes);
+app.use("/api/uploads", uploadRoutes);
 // Error handling middleware
 app.use(errorHandler);
 

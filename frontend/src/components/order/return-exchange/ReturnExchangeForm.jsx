@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../../../context/AuthContext'
 import {
     LuEye,
     LuImagePlus,
-    LuTrash2,
     LuX,
 } from 'react-icons/lu'
 
 import Button from '../../ui/Button'
-import { getProductById } from '../../../api/product.api'
+import { getProductById} from '../../../api/product.api'
+import {
+    uploadReturnExchangeProof,
+} from '../../../api/order.api'
 
 const REASONS = [
     { value: 'size_issue', label: 'Size issue' },
@@ -34,6 +37,8 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 const MAX_VIDEO_SIZE = 20 * 1024 * 1024
 
 function ReturnExchangeForm({ type, onClose, productId }) {
+    const { token } = useAuth()
+
     const [reason, setReason] = useState('')
     const [comment, setComment] = useState('')
     const [error, setError] = useState('')
@@ -47,6 +52,8 @@ function ReturnExchangeForm({ type, onClose, productId }) {
 
     const [selectedColor, setSelectedColor] = useState('')
     const [selectedSize, setSelectedSize] = useState('')
+
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const requiresProof = PROOF_REASONS.includes(reason)
 
@@ -178,8 +185,11 @@ function ReturnExchangeForm({ type, onClose, productId }) {
         )
     }
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault()
+
+        // Clear the previous validation/API error before starting submission.
+        setError('')
 
         if (!reason) {
             setError('Please select a reason')
@@ -200,14 +210,47 @@ function ReturnExchangeForm({ type, onClose, productId }) {
             return
         }
 
-        // API submission will be connected after the form UX is complete.
-        console.log({
-            type,
-            reason,
-            comment,
-            selectedSize,
-            proof,
-        })
+        if (!token) {
+            setError('Please login again')
+            return
+        }
+
+        try {
+            setIsSubmitting(true)
+
+            const uploadedProof = []
+
+            // Upload each selected proof file to Cloudinary.
+            // We keep uploads sequential so the flow remains predictable
+            // and easier to handle if one upload fails.
+            for (const file of proof) {
+                const response = await uploadReturnExchangeProof(
+                    file,
+                    token
+                )
+
+                uploadedProof.push({
+                    url: response.data.url,
+                    type: response.data.resourceType,
+                })
+            }
+
+            // Temporary verification only.
+            // The next step will send these URLs to the Return/Exchange
+            // request creation API.
+            console.log({
+                type,
+                reason,
+                comment,
+                selectedColor,
+                selectedSize,
+                proof: uploadedProof,
+            })
+        } catch (error) {
+            setError(error.message || 'Failed to upload proof')
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     return (
@@ -446,10 +489,12 @@ function ReturnExchangeForm({ type, onClose, productId }) {
             <div className="flex gap-2">
                 <Button
                     type="submit"
+                    disabled={isSubmitting}
                     className="rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium 
-                    text-white transition hover:bg-neutral-800"
+                    text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed 
+                    disabled:opacity-50"
                 >
-                    Submit {type}
+                    {isSubmitting ? 'Uploading...' : `Submit ${type}`}
                 </Button>
 
                 {onClose && (

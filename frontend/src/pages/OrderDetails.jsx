@@ -2,7 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { useAuth } from '../context/AuthContext'
-import { getOrderById, getReturnExchangeRequestsByOrder, getReturnExchangeEligibility } from '../api/order.api'
+
+import {
+  getOrderById,
+  getReturnExchangeRequestsByOrder,
+  getReturnExchangeEligibility,
+  cancelOrder
+} from '../api/order.api'
+
 import {
   ReturnRequestDetails,
   ExchangeRequestDetails,
@@ -21,7 +28,7 @@ function OrderDetails() {
   const [returnExchangeRequests, setReturnExchangeRequests] = useState([]);
   // Stores backend-authoritative Return/Exchange eligibility for each order item.
   const [returnExchangeEligibility, setReturnExchangeEligibility] = useState([]);
-
+// ----------------------------------------------
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -58,7 +65,22 @@ function OrderDetails() {
       fetchOrder()
     }
   }, [token, id])
+// ------------------------------------------------
+  const handleCancelOrder = async () => {
+    try {
+      setError(null)
 
+      // Backend remains the final authority for cancellation eligibility.
+      await cancelOrder(order._id, token)
+
+      // Refresh the order so UI reflects the backend-authoritative state.
+      const response = await getOrderById(order._id, token)
+      setOrder(response.data)
+    } catch (error) {
+      setError(error.message)
+    }
+  }
+// -----------------------------------------------------
   if (isLoading) {
     return <div className="py-6">Loading order...</div>
   }
@@ -70,7 +92,23 @@ function OrderDetails() {
   if (!order) {
     return <div className="py-6">Order not found.</div>
   }
+// ---------------------------------------------------
+  const createdAt = new Date(order?.createdAt)
+  const cancelDeadline = new Date(
+    createdAt.getTime() + 24 * 60 * 60 * 1000
+  )
 
+  const cancellableStatuses = [
+    'pending',
+    'confirmed',
+    'processing',
+  ]
+
+  const canCancel =
+    order &&
+    new Date() < cancelDeadline &&
+    cancellableStatuses.includes(order.orderStatus)
+  // --------------------------------------------------
   return (
     <section className="py-6">
       {/* Header */}
@@ -90,36 +128,98 @@ function OrderDetails() {
       </div>
 
       {/* Order Status */}
-      <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
-        <p className="text-xs uppercase tracking-wider text-neutral-500">
-          Order Status
-        </p>
+      <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-4 sm:p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-neutral-500">
+              Order Status
+            </p>
 
-        <p className="mt-2 text-lg font-medium capitalize">
-          {order.orderStatus}
-        </p>
-
-        {/* Status Timeline */}
-        <div className="mt-5 space-y-4">
-          {order.statusHistory.map((history, index) => (
-            <div
-              key={`${history.status}-${history.timestamp}-${index}`}
-              className="flex gap-3"
-            >
-              <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-black" />
-
-              <div>
-                <p className="text-sm font-medium capitalize">
-                  {history.status}
-                </p>
-
-                <p className="mt-1 text-xs text-neutral-500">
-                  {new Date(history.timestamp).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          ))}
+            <p className="mt-2 text-lg font-medium capitalize">
+              {order.orderStatus.replaceAll('_', ' ')}
+            </p>
+          </div>
         </div>
+
+        {/* Responsive horizontal order timeline */}
+        <div className="mt-8 w-full">
+          <div className="flex items-start justify-between">
+            {[
+              { label: 'Ordered', statuses: ['pending', 'confirmed', 'processing'] },
+              { label: 'Shipped', statuses: ['shipped'] },
+              { label: 'Out for delivery', statuses: ['out_for_delivery'] },
+              { label: 'Delivered', statuses: ['delivered'] },
+            ].map((stage, index, stages) => {
+              const statusOrder = [
+                'pending',
+                'confirmed',
+                'processing',
+                'shipped',
+                'out_for_delivery',
+                'delivered',
+              ]
+
+              const currentIndex = statusOrder.indexOf(order.orderStatus)
+              const stageIndex = statusOrder.indexOf(stage.statuses[0])
+
+              const isCompleted =
+                currentIndex !== -1 && currentIndex >= stageIndex
+
+              return (
+                <div
+                  key={stage.label}
+                  className="flex min-w-0 flex-1 items-start"
+                >
+                  <div className="flex min-w-0 flex-1 flex-col items-center">
+                    <div
+                      className={`flex h-7 w-7 items-center justify-center rounded-full border 
+                        text-xs font-medium ${
+                        isCompleted
+                          ? 'border-black bg-black text-white'
+                          : 'border-neutral-300 bg-white text-neutral-400'
+                      }`}
+                    >
+                      {isCompleted ? '✓' : index + 1}
+                    </div>
+
+                    <p
+                      className={`mt-2 text-center text-[11px] leading-4 sm:text-xs ${
+                        isCompleted
+                          ? 'font-medium text-neutral-900'
+                          : 'text-neutral-400'
+                      }`}
+                    >
+                      {stage.label}
+                    </p>
+                  </div>
+
+                  {/* Connector between timeline stages */}
+                  {index < stages.length - 1 && (
+                    <div
+                      className={`mt-3 h-px flex-1 ${
+                        isCompleted
+                          ? 'bg-black'
+                          : 'bg-neutral-200'
+                      }`}
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Track Order belongs to the status section */}
+        {order.tracking?.trackingUrl && (
+          <a
+            href={order.tracking.trackingUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 inline-block text-sm font-medium underline underline-offset-4"
+          >
+            Track Order
+          </a>
+        )}
       </div>
 
       {/* Ordered Items */}
@@ -139,39 +239,55 @@ function OrderDetails() {
               key={item._id}
               className="rounded-2xl border border-neutral-200 bg-white p-4"
               >
-              <div className="flex gap-4">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="h-24 w-20 rounded-lg object-cover"
-                />
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                {/* Product information */}
+                <div className="flex min-w-0 gap-4 sm:flex-1">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="h-24 w-20 shrink-0 rounded-lg object-cover"
+                  />
 
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">
-                    {item.name}
-                  </p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      {item.name}
+                    </p>
 
-                  <p className="mt-1 text-sm text-neutral-500">
-                    {item.color} · {item.size}
-                  </p>
+                    <p className="mt-1 text-sm text-neutral-500">
+                      {item.color} · {item.size}
+                    </p>
 
-                  <p className="mt-1 text-sm text-neutral-500">
-                    Qty: {item.quantity}
-                  </p>
+                    <p className="mt-1 text-sm text-neutral-500">
+                      Qty: {item.quantity}
+                    </p>
 
-                  <p className="mt-2 text-sm font-medium">
-                    ₹{item.price}
-                  </p>
+                    <p className="mt-2 text-sm font-medium">
+                      ₹{item.price}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Item actions */}
+                <div className="flex flex-wrap items-center gap-4 sm:w-48 sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/products/${item.slug}`)}
+                    className="text-sm font-medium underline underline-offset-4"
+                  >
+                    View Product
+                  </button>
+
+                  {canCancel && (
+                    <button
+                      type="button"
+                      onClick={handleCancelOrder}
+                      className="text-sm font-medium text-neutral-700"
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={() => navigate(`/products/${item.slug}`)}
-                className="mt-4 text-sm font-medium underline underline-offset-4"
-              >
-                View Product
-              </button>
 
               {/* Backend-authoritative Return/Exchange eligibility */}
               <ReturnExchangeEligibility
@@ -290,17 +406,6 @@ function OrderDetails() {
               <p>
                 Tracking Number: {order.tracking.trackingNumber}
               </p>
-            )}
-
-            {order.tracking.trackingUrl && (
-              <a
-                href={order.tracking.trackingUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block mt-2 font-medium underline underline-offset-4"
-              >
-                Track Shipment
-              </a>
             )}
           </div>
         </div>

@@ -111,12 +111,35 @@ function ReturnExchangeEligibility({ eligibility, productId  }) {
             )}
         </div>
         {activeType && (
-            <ReturnExchangeForm
-                type={activeType}
-                productId={productId}
-                onClose={() => setActiveType(null)}
-            />
-        )}
+                <div className="mt-6 grid gap-8 sm:grid-cols-2">
+                    {/* Contextual guidance for the selected action. */}
+                    <div className="flex min-h-full items-center">
+                        <div className="max-w-sm">
+                            <p className="text-2xl font-medium tracking-tight uppercase text-neutral-900">
+                                {activeType === 'return'
+                                    ? '↻ Not the right fit?'
+                                    : '↔ Need another size?'}
+                            </p>
+
+                            <p className="mt-3 text-xs leading-6 tracking-wider uppercase
+                            text-neutral-500">
+                                {activeType === 'return'
+                                    ? "Tell us what went wrong and we'll take it from here."
+                                    : 'Choose your preferred color and size for the exchange.'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* The actual form stays unchanged and uses the right column on desktop. */}
+                    <div className="w-full">
+                        <ReturnExchangeForm
+                            type={activeType}
+                            productId={productId}
+                            onClose={() => setActiveType(null)}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
